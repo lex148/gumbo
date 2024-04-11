@@ -1,4 +1,5 @@
 use super::ensure_directory_exists;
+use super::modrs::append_module;
 use super::TemplateError;
 use std::fs::File;
 use std::io::Write;
@@ -15,7 +16,11 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
         .open(&path)?;
 
     file.write_all(CODE.as_bytes())?;
-    write_view(root_path)?;
+
+    append_module(root_path, "./src/views/mod.rs", "greetings")?;
+    append_module(root_path, "./src/views/greetings/mod.rs", "index")?;
+
+    write_view_index(root_path)?;
 
     Ok(())
 }
@@ -32,26 +37,6 @@ async fn index() -> Result<HttpResponse> {
     let args = ViewArgs { };
     render::<View, _>(args).await
 }
-"#;
-
-pub(crate) fn write_view(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/views/greetings/mod.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-
-    file.write_all(VIEW_MOD.as_bytes())?;
-    write_view_index(root_path)?;
-
-    Ok(())
-}
-
-static VIEW_MOD: &str = r#"
-pub(crate) mod index;
 "#;
 
 pub(crate) fn write_view_index(root_path: &Path) -> Result<(), TemplateError> {

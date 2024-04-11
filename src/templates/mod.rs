@@ -9,6 +9,7 @@ pub(crate) mod greetings_controller;
 pub(crate) mod helpers_mod;
 pub(crate) mod inputcss;
 pub(crate) mod main;
+pub(crate) mod modrs;
 pub(crate) mod views_mod;
 
 #[derive(Debug, Error)]
