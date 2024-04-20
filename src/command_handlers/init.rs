@@ -1,7 +1,7 @@
 use crate::templates::TemplateError;
 use crate::templates::{
-    asset_controller, build, controller_mod, errors, greetings_controller, helpers_mod, inputcss,
-    main, views_mod,
+    asset_controller, build, errors, greetings_controller, helpers_mod, inputcss, main, migrations,
+    views_mod,
 };
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -30,12 +30,13 @@ fn run_inner(path: &Path) -> Result<(), InitError> {
 
     build::write_template(path).map_err(InitError::Template)?;
     inputcss::write_template(path).map_err(InitError::Template)?;
-    controller_mod::write_template(path).map_err(InitError::Template)?;
     asset_controller::write_template(path).map_err(InitError::Template)?;
     greetings_controller::write_template(path).map_err(InitError::Template)?;
     views_mod::write_template(path).map_err(InitError::Template)?;
     helpers_mod::write_template(path).map_err(InitError::Template)?;
     errors::write_template(path).map_err(InitError::Template)?;
+    crate::templates::touch(path, "./src/models/mod.rs").map_err(InitError::Template)?;
+    migrations::init::write_template(path).map_err(InitError::Template)?;
     main::write_template(path).map_err(InitError::Template)?;
 
     Ok(())

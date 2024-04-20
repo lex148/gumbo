@@ -17,6 +17,12 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
 
     file.write_all(CODE.as_bytes())?;
 
+    append_module(
+        root_path,
+        "./src/controllers/mod.rs",
+        "greetings_controller",
+    )?;
+
     append_module(root_path, "./src/views/mod.rs", "greetings")?;
     append_module(root_path, "./src/views/greetings/mod.rs", "index")?;
 

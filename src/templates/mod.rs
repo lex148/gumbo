@@ -3,13 +3,16 @@ use thiserror::Error;
 
 pub(crate) mod asset_controller;
 pub(crate) mod build;
-pub(crate) mod controller_mod;
+pub(crate) mod controller;
 pub(crate) mod errors;
 pub(crate) mod greetings_controller;
 pub(crate) mod helpers_mod;
 pub(crate) mod inputcss;
 pub(crate) mod main;
+pub(crate) mod migrations;
+pub(crate) mod models;
 pub(crate) mod modrs;
+pub(crate) mod view;
 pub(crate) mod views_mod;
 
 #[derive(Debug, Error)]
@@ -59,5 +62,15 @@ pub(crate) fn try_format(path: &Path) -> Result<(), TemplateError> {
             }
         }
     }
+    Ok(())
+}
+
+pub(crate) fn touch(root: &Path, sub: &str) -> Result<(), TemplateError> {
+    let mut path = root.to_path_buf();
+    path.push(sub);
+    ensure_directory_exists(&path)?;
+    // Open the file in read-write mode without truncating it, creating it if it does not exist.
+    use std::fs::File;
+    let _file = File::options().append(true).create(true).open(path)?;
     Ok(())
 }
