@@ -25,6 +25,7 @@ pub(crate) fn append_service(
     root_path: &Path,
     service: impl Into<String>,
 ) -> Result<(), TemplateError> {
+    let service: String = service.into();
     let mut path = root_path.to_path_buf();
     path.push("src/main.rs");
 
@@ -37,8 +38,9 @@ pub(crate) fn append_service(
         Some(x) => x.to_owned(),
         None => return Ok(()),
     };
-
-    let service: String = service.into();
+    if last_service.contains(&service) {
+        return Ok(());
+    }
     let new_service = format!(".service({})", service);
     let code = format!("{}\n            {}", last_service, new_service);
     let modified_content = content.replace(&last_service, &code);
