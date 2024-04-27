@@ -1,5 +1,6 @@
 use super::modrs::append_module;
 use super::TemplateError;
+use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::main::append_service;
 use std::fs::File;
@@ -7,7 +8,9 @@ use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
 
+mod create;
 mod index;
+mod new;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Action {
@@ -47,7 +50,8 @@ pub(crate) fn write_template(
 
     // make sure the controller file exists. Adds the use as the top
     let mut ctr_path = root_path.to_path_buf();
-    ctr_path.push(format!("./src/controllers/{ctr_name}.rs"));
+    super::ensure_directory_exists(&ctr_path)?;
+    ctr_path.push(format!("./src/controllers/{ctr_name}/mod.rs"));
     write_head(&ctr_path)?;
 
     // add an action for each action
@@ -68,15 +72,30 @@ pub(crate) fn write_template(
 }
 
 /// Writes all the actions fully build wired up with views
-pub(crate) fn write_crud_templates(root_path: &Path, names: &Names) -> Result<(), TemplateError> {
+pub(crate) fn write_crud_templates(
+    root_path: &Path,
+    names: &Names,
+    fields: &[Field],
+) -> Result<(), TemplateError> {
     let usemodel = format!(
-        "use crate::models::{}::{};\n\n",
+        "use crate::models::{}::{};",
         &names.model_mod, &names.model_struct
     );
-    let parts = [HEAD.to_string(), usemodel, index::crud_template(names)];
+    let parts = [
+        HEAD.to_string(),
+        format!("{usemodel}\nmod create_params;\nuse create_params::CreateParams;"),
+        "".to_owned(),
+        index::crud_template(names),
+        "".to_owned(),
+        new::crud_template(names),
+        "".to_owned(),
+        create::crud_template(names),
+    ];
 
     let ctr_name = &names.controller_mod;
     append_service(root_path, format!("{ctr_name}::index"))?;
+    append_service(root_path, format!("{ctr_name}::new"))?;
+    append_service(root_path, format!("{ctr_name}::create"))?;
 
     // add the controller to the module
     let ctr_name = &names.controller_mod;
@@ -85,14 +104,14 @@ pub(crate) fn write_crud_templates(root_path: &Path, names: &Names) -> Result<()
     // write the contents to the controller file
     let mut ctr_path = root_path.to_path_buf();
     ctr_path.push(&names.controller_path);
+    super::ensure_directory_exists(&ctr_path)?;
 
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(ctr_path)?;
+    let mut file = File::create(ctr_path)?;
     let code = parts.join("\n");
     file.write_all(code.as_bytes())?;
+
+    // Add the params models
+    create::write_params(root_path, names, fields)?;
 
     Ok(())
 }
@@ -113,7 +132,7 @@ fn write_head(path: &Path) -> std::io::Result<()> {
 
 static HEAD: &str = "use crate::errors::Result;
 use crate::DbClient;
-use crate::helpers::render;
+use crate::helpers::{render, redirect};
 use welds::prelude::*;
-use actix_web::{get, web::Path, HttpResponse};
+use actix_web::{get, post, web::Path, web::Form, HttpResponse};
 ";

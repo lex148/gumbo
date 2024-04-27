@@ -81,6 +81,7 @@ fn cargo_init(path: &Path) -> Result<(), InitError> {
     add_dependencies(path, &["add", "thiserror"])?;
     add_dependencies(path, &["add", "actix-web"])?;
     add_dependencies(path, &["add", "log"])?;
+    add_dependencies(path, &["add", "serde"])?;
     add_dependencies(path, &["add", "pretty_env_logger"])?;
     add_dependencies(path, &["add", "yew", "--features=ssr"])?;
 

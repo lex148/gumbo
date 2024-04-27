@@ -1,15 +1,24 @@
+use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::modrs::append_module;
 use crate::templates::TemplateError;
 use std::path::Path;
 
+mod form;
 mod index;
+mod new;
 mod single;
 
 /// Writes all the actions views
-pub(crate) fn write_crud_templates(root_path: &Path, names: &Names) -> Result<(), TemplateError> {
-    single::write_crud_template(root_path, names)?;
+pub(crate) fn write_crud_templates(
+    root_path: &Path,
+    names: &Names,
+    fields: &[Field],
+) -> Result<(), TemplateError> {
+    single::write_crud_template(root_path, names, fields)?;
     index::write_crud_template(root_path, names)?;
+    form::write_crud_template(root_path, names, fields)?;
+    new::write_crud_template(root_path, names, fields)?;
 
     // add this view mod to the module of all views
     let view_mod = &names.view_mod;

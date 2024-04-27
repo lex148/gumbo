@@ -37,4 +37,13 @@ where
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
+
+/// Render a Yew view to send out in an Actix Response
+/// Used when a form is not valid
+pub(crate) fn redirect(path: impl Into<String>) -> Result<HttpResponse> {
+    let path: String = path.into();
+    Ok(HttpResponse::SeeOther()
+        .insert_header(("Location", path))
+        .finish())
+}
 "#;

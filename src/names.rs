@@ -19,7 +19,7 @@ impl Names {
         let s = pluralizer::pluralize(name.trim(), 1, false).to_snake_case();
         let class = s.to_class_case();
         let model_path = PathBuf::from(format!("./src/models/{s}/mod.rs"));
-        let controller_path = PathBuf::from(format!("./src/controllers/{p}_controller.rs"));
+        let controller_path = PathBuf::from(format!("./src/controllers/{p}_controller/mod.rs"));
 
         Names {
             controller_mod: format!("{p}_controller"),
@@ -50,7 +50,7 @@ mod tests {
         let n = Names::new("carPrice");
         assert_eq!(
             n.controller_path.to_str().unwrap(),
-            "./src/controllers/car_prices_controller.rs"
+            "./src/controllers/car_prices_controller/mod.rs"
         );
     }
 

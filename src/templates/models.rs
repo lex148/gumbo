@@ -48,16 +48,16 @@ pub(crate) struct {model_name} {{
 "#
     );
 
-    Ok(format!("{head}{innerds}\n}}"))
+    Ok(format!("{head}  #[welds(primary_key)]\n{innerds}\n}}"))
 }
 
 fn field_line(field: &Field) -> String {
     let Field { name, ty, null } = field;
     let ty = ty.rust_type();
     if *null {
-        format!("  {name}: Option<{ty}>,")
+        format!("  pub {name}: Option<{ty}>,")
     } else {
-        format!("  {name}: {ty},")
+        format!("  pub {name}: {ty},")
     }
 }
 
@@ -86,9 +86,9 @@ use welds::prelude::*;
 #[derive(Debug, WeldsModel, PartialEq)]
 #[welds(table = "inventory_levels")]
 pub(crate) struct InventoryLevel {
-  id: i32,
-  item: Option<String>,
-  price: f32,
+  pub id: i32,
+  pub item: Option<String>,
+  pub price: f32,
 }"#
             .trim()
         )

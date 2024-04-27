@@ -30,6 +30,8 @@ pub type Result<T> = std::result::Result<T, ServerError>;
 pub enum ServerError {
     #[error("A database Error occured")]
     DatabaseError(WeldsError),
+    #[error("Invalid Data")]
+    InvalidData,
 }
 
 // How the server should Response to an error in the system
@@ -52,6 +54,7 @@ impl ResponseError for ServerError {
     fn status_code(&self) -> StatusCode {
         match *self {
             ServerError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ServerError::InvalidData => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 }

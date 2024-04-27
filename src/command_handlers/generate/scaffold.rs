@@ -17,8 +17,8 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<(), GenerateErro
     models::write_template(&root_path, &names, &fields)?;
     migrations::create_table::write_template(&root_path, &names, &fields)?;
 
-    controller::write_crud_templates(&root_path, &names)?;
-    view::write_crud_templates(&root_path, &names)?;
+    controller::write_crud_templates(&root_path, &names, &fields)?;
+    view::write_crud_templates(&root_path, &names, &fields)?;
 
     Ok(())
 }
