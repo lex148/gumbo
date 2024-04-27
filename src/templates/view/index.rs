@@ -54,6 +54,7 @@ fn impl_view_args(names: &Names) -> Impl {
 fn view(names: &Names) -> String {
     let name = &names.model_struct;
     let single = &names.model_mod;
+    let viewmod = &names.view_mod;
     let title = &names.title;
     format!(
         r#"
@@ -65,7 +66,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {{
           {{ args.list.iter().map(|x| html!{{ <{name}View {single}={{x}} />}}  ).collect::<Html>() }}
 
           <br/>
-          <a href={{"/cars/new"}} >{{"New {title}"}}</a>
+          <a href={{"/{viewmod}/new"}} >{{"New {title}"}}</a>
         </MainLayout>
     }}
 }}
