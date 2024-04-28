@@ -63,13 +63,29 @@ pub(crate) fn View(args: &ViewArgs) -> Html {{
     html! {{
         <MainLayout>
           <h1>{{"List of {title}"}}</h1>
-          {{ args.list.iter().map(|x| html!{{ <{name}View {single}={{x}} />}}  ).collect::<Html>() }}
-
+          {{ args.list.iter().map(|x| html!{{ <Row {single}={{x}} />}}  ).collect::<Html>() }}
           <br/>
           <a href={{"/{viewmod}/new"}} >{{"New {title}"}}</a>
         </MainLayout>
     }}
 }}
+
+#[derive(Properties, PartialEq)]
+pub(crate) struct RowArgs {{
+    pub(crate) {single}: Arc<{name}>,
+}}
+
+#[function_component]
+fn Row(args: &RowArgs) -> Html {{
+    html! {{
+        <>
+            <{name}View {single}={{args.{single}.clone()}} />
+            <a href={{format!("/{viewmod}/{{}}/edit", args.{single}.id)}} >{{"Edit"}}</a>
+            <br/>
+        </>
+    }}
+}}
+
 "#
     )
 }
