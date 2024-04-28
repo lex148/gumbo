@@ -9,8 +9,10 @@ use std::path::Path;
 use std::str::FromStr;
 
 mod create;
+mod edit;
 mod index;
 mod new;
+mod update;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Action {
@@ -83,19 +85,27 @@ pub(crate) fn write_crud_templates(
     );
     let parts = [
         HEAD.to_string(),
-        format!("{usemodel}\nmod create_params;\nuse create_params::CreateParams;"),
+        usemodel.to_owned(),
+        "mod create_params;\nuse create_params::CreateParams;".to_owned(),
+        "mod update_params;\nuse update_params::UpdateParams;".to_owned(),
         "".to_owned(),
         index::crud_template(names),
         "".to_owned(),
         new::crud_template(names),
         "".to_owned(),
         create::crud_template(names),
+        "".to_owned(),
+        edit::crud_template(names),
+        "".to_owned(),
+        update::crud_template(names),
     ];
 
     let ctr_name = &names.controller_mod;
     append_service(root_path, format!("{ctr_name}::index"))?;
     append_service(root_path, format!("{ctr_name}::new"))?;
     append_service(root_path, format!("{ctr_name}::create"))?;
+    append_service(root_path, format!("{ctr_name}::edit"))?;
+    append_service(root_path, format!("{ctr_name}::update"))?;
 
     // add the controller to the module
     let ctr_name = &names.controller_mod;
@@ -112,6 +122,7 @@ pub(crate) fn write_crud_templates(
 
     // Add the params models
     create::write_params(root_path, names, fields)?;
+    update::write_params(root_path, names, fields)?;
 
     Ok(())
 }
@@ -130,7 +141,7 @@ fn write_head(path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-static HEAD: &str = "use crate::errors::Result;
+static HEAD: &str = "use crate::errors::{Result, ServerError};
 use crate::DbClient;
 use crate::helpers::{render, redirect};
 use welds::prelude::*;

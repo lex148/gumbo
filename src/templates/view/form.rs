@@ -53,7 +53,8 @@ pub(crate) struct ViewArgs {{
 #[function_component]
 pub(crate) fn Form(args: &ViewArgs) -> Html {{
     html! {{
-        <form action={{args.action.clone()}} method={{args.method.clone()}} >
+        <form action={{args.action.clone()}} method={{"POST"}} >
+            <input type="hidden" name={{"_method"}} value={{args.method.clone()}} />
 {fieldscode}
             <input type="submit" value={{"Save"}} />
         </form>

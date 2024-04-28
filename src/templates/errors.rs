@@ -32,6 +32,8 @@ pub enum ServerError {
     DatabaseError(WeldsError),
     #[error("Invalid Data")]
     InvalidData,
+    #[error("Resource Not Found")]
+    ResourceNotFound,
 }
 
 // How the server should Response to an error in the system
@@ -55,6 +57,7 @@ impl ResponseError for ServerError {
         match *self {
             ServerError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ServerError::InvalidData => StatusCode::UNPROCESSABLE_ENTITY,
+            ServerError::ResourceNotFound => StatusCode::NOT_FOUND,
         }
     }
 }

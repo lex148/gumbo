@@ -4,6 +4,7 @@ use crate::templates::modrs::append_module;
 use crate::templates::TemplateError;
 use std::path::Path;
 
+mod edit;
 mod form;
 mod index;
 mod new;
@@ -19,6 +20,7 @@ pub(crate) fn write_crud_templates(
     index::write_crud_template(root_path, names)?;
     form::write_crud_template(root_path, names, fields)?;
     new::write_crud_template(root_path, names, fields)?;
+    edit::write_crud_template(root_path, names, fields)?;
 
     // add this view mod to the module of all views
     let view_mod = &names.view_mod;
