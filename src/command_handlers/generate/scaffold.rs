@@ -19,6 +19,7 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<(), GenerateErro
 
     controller::write_crud_templates(&root_path, &names, &fields)?;
     view::write_crud_templates(&root_path, &names, &fields)?;
+    crate::command_handlers::run_rustfmt(&root_path);
 
     Ok(())
 }

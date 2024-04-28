@@ -38,6 +38,7 @@ fn run_inner(path: &Path) -> Result<(), InitError> {
     crate::templates::touch(path, "./src/models/mod.rs").map_err(InitError::Template)?;
     migrations::init::write_template(path).map_err(InitError::Template)?;
     main::write_template(path).map_err(InitError::Template)?;
+    super::run_rustfmt(path);
 
     Ok(())
 }
