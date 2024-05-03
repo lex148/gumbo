@@ -4,6 +4,7 @@ use thiserror::Error;
 pub(crate) mod asset_controller;
 pub(crate) mod build;
 pub(crate) mod controller;
+pub(crate) mod docker;
 pub(crate) mod errors;
 pub(crate) mod greetings_controller;
 pub(crate) mod helpers_mod;
