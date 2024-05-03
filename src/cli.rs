@@ -34,7 +34,8 @@ pub(crate) enum GenerateCommands {
         /// create a model/view/controller/migration for cars. Everything all wired up for the
         /// three fields
         name: String,
-        /// List of fields for model. Example: name:string description:text
+        /// List of fields for model. Example: name:string description:text:option
+        ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
         fields: Vec<String>,
     },
 
