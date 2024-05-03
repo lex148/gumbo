@@ -9,10 +9,10 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<(), GenerateErro
     let root_path = get_root_path()?;
     let names = Names::new(name);
 
-    let fields: Vec<Field> = fields
-        .iter()
-        .filter_map(|s| Field::from_str(s).ok())
-        .collect();
+    let fields: Result<Vec<Field>, _> = fields.iter().map(|s| Field::from_str(s)).collect();
+
+    //TODO: display a better message why it can scaffold
+    let fields = fields.expect("Error: unknown type in fields");
 
     models::write_template(&root_path, &names, &fields)?;
     migrations::create_table::write_template(&root_path, &names, &fields)?;

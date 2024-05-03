@@ -14,7 +14,7 @@ mod index;
 mod new;
 mod update;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum Action {
     Index,
     Show,
@@ -46,29 +46,52 @@ pub(crate) fn write_template(
     name: &str,
     actions: &[Action],
 ) -> Result<(), TemplateError> {
+    let names = Names::new(name);
+    let ctr_name = &names.controller_mod;
+
     // add the controller to the module
-    let ctr_name = format!("{name}_controller");
-    append_module(root_path, "./src/controllers/mod.rs", &ctr_name)?;
+    append_module(root_path, "./src/controllers/mod.rs", ctr_name)?;
 
     // make sure the controller file exists. Adds the use as the top
     let mut ctr_path = root_path.to_path_buf();
-    super::ensure_directory_exists(&ctr_path)?;
     ctr_path.push(format!("./src/controllers/{ctr_name}/mod.rs"));
-    write_head(&ctr_path)?;
+    super::ensure_directory_exists(&ctr_path)?;
+
+    let mut parts = vec![HEAD.to_string()];
 
     // add an action for each action
     for action in actions {
-        match action {
-            Action::Index => index::write_template(name, &ctr_path)?,
-            //Action::Show => show::write_template(&ctr_path)?,
-            //Action::New => new::write_template(&ctr_path)?,
-            //Action::Create => create::write_template(&ctr_path)?,
-            //Action::Edit => edit::write_template(&ctr_path)?,
-            //Action::Update => update::write_template(&ctr_path)?,
-            //Action::Delete => delete::write_template(&ctr_path)?,
-            _ => todo!(),
+        if action == &Action::Index {
+            parts.push("".to_owned());
+            parts.push(index::crud_template(&names));
+        }
+        if action == &Action::New {
+            parts.push("".to_owned());
+            parts.push(new::crud_template(&names));
+        }
+        if action == &Action::Create {
+            parts.push("".to_owned());
+            parts.push("mod create_params;\nuse create_params::CreateParams;".to_owned());
+            parts.push("".to_owned());
+            parts.push(create::crud_template(&names));
+            create::write_params(root_path, &names, &[])?;
+        }
+        if action == &Action::Edit {
+            parts.push("".to_owned());
+            parts.push(edit::crud_template(&names));
+        }
+        if action == &Action::Update {
+            parts.push("".to_owned());
+            parts.push("mod update_params;\nuse update_params::UpdateParams;".to_owned());
+            parts.push("".to_owned());
+            parts.push(update::crud_template(&names));
+            update::write_params(root_path, &names, &[])?;
         }
     }
+
+    let mut file = File::create(ctr_path)?;
+    let code = parts.join("\n");
+    file.write_all(code.as_bytes())?;
 
     Ok(())
 }
