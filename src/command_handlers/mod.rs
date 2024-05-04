@@ -1,6 +1,5 @@
 pub(crate) mod generate;
 pub(crate) mod init;
-use std::env;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -11,33 +10,25 @@ pub(crate) fn run_rustfmt(root_path: &Path) {
 }
 
 fn run_rustfmt_inner(root_path: &Path) -> Result<(), String> {
-    // TODO format rust code that is generated
-    Ok(())
-    //// Set the desired working directory
-    //let working_directory = root_path;
+    // Check if the working directory exists
+    if !Path::new(root_path).exists() {
+        return Err("Working directory does not exist.".to_string());
+    }
 
-    //// Check if the working directory exists
-    //if !Path::new(working_directory).exists() {
-    //    return Err("Working directory does not exist.".to_string());
-    //}
+    // Execute the rustfmt command
+    let result = Command::new("sh")
+        .current_dir(root_path)
+        .args(["-c", r#"rustfmt --edition 2021 ./**/*.rs"#])
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status();
 
-    //// Change to the desired directory
-    //if let Err(e) = env::set_current_dir(working_directory) {
-    //    return Err(format!("Failed to change directory: {}", e));
-    //}
-
-    //// Execute the rustfmt command
-    //let result = Command::new("rustfmt")
-    //    .current_dir(root_path)
-    //    .args(["--edition", "2021", "./**/*.rs"])
-    //    //.stdout(Stdio::null()) // Suppress output
-    //    //.stderr(Stdio::null()) // Suppress errors
-    //    .stdout(Stdio::inherit())
-    //    .stderr(Stdio::inherit())
-    //    .status();
-
-    //match result {
-    //    Ok(status) if status.success() => Ok(()),
-    //    Ok(_) | Err(_) => Err("rustfmt encountered an error or failed to run.".to_string()),
-    //}
+    match result {
+        Ok(status) if status.success() => Ok(()),
+        Ok(_) => Err("rustfmt encountered an error or failed to run.".to_string()),
+        Err(err) => {
+            eprintln!("rustfmt: {:?}", err);
+            Err("rustfmt encountered an error or failed to run.".to_string())
+        }
+    }
 }
