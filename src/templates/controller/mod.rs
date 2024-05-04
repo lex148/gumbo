@@ -1,52 +1,27 @@
+use cruet::Inflector;
+
 use super::modrs::append_module;
 use super::TemplateError;
+use crate::action::Action;
 use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::main::append_service;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use std::str::FromStr;
 
 mod create;
 mod edit;
+mod empty;
 mod index;
 mod new;
 mod update;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum Action {
-    Index,
-    Show,
-    Edit,
-    Update,
-    New,
-    Create,
-    Delete,
-}
-
-impl FromStr for Action {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.to_lowercase().as_str() {
-            "index" => Action::Index,
-            "show" => Action::Show,
-            "edit" => Action::Edit,
-            "update" => Action::Update,
-            "new" => Action::New,
-            "create" => Action::Create,
-            "delete" => Action::Delete,
-            _ => return Err(()),
-        })
-    }
-}
-
 pub(crate) fn write_template(
     root_path: &Path,
-    name: &str,
+    names: &Names,
     actions: &[Action],
 ) -> Result<(), TemplateError> {
-    let names = Names::new(name);
     let ctr_name = &names.controller_mod;
 
     // add the controller to the module
@@ -61,32 +36,10 @@ pub(crate) fn write_template(
 
     // add an action for each action
     for action in actions {
-        if action == &Action::Index {
-            parts.push("".to_owned());
-            parts.push(index::crud_template(&names));
-        }
-        if action == &Action::New {
-            parts.push("".to_owned());
-            parts.push(new::crud_template(&names));
-        }
-        if action == &Action::Create {
-            parts.push("".to_owned());
-            parts.push("mod create_params;\nuse create_params::CreateParams;".to_owned());
-            parts.push("".to_owned());
-            parts.push(create::crud_template(&names));
-            create::write_params(root_path, &names, &[])?;
-        }
-        if action == &Action::Edit {
-            parts.push("".to_owned());
-            parts.push(edit::crud_template(&names));
-        }
-        if action == &Action::Update {
-            parts.push("".to_owned());
-            parts.push("mod update_params;\nuse update_params::UpdateParams;".to_owned());
-            parts.push("".to_owned());
-            parts.push(update::crud_template(&names));
-            update::write_params(root_path, &names, &[])?;
-        }
+        parts.push("".to_owned());
+        parts.push(empty::template(names, action));
+        let actionname = action.name.to_snake_case();
+        append_service(root_path, format!("{ctr_name}::{actionname}"))?;
     }
 
     let mut file = File::create(ctr_path)?;

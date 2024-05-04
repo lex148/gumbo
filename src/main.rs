@@ -2,6 +2,7 @@ use clap::Parser;
 
 use crate::cli::RootCommand;
 
+pub(crate) mod action;
 pub(crate) mod cli;
 pub(crate) mod command_handlers;
 pub(crate) mod fields;
