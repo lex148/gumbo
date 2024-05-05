@@ -5,6 +5,7 @@ use crate::names::Names;
 use crate::templates;
 use std::str::FromStr;
 use templates::controller;
+use templates::view;
 
 pub(crate) fn generate(name: &str, actions: &[String]) -> Result<(), GenerateError> {
     let name = name.trim().to_lowercase();
@@ -23,6 +24,8 @@ pub(crate) fn generate(name: &str, actions: &[String]) -> Result<(), GenerateErr
         .filter(|a| a.method == "get")
         .cloned()
         .collect();
+
+    view::write_empty_templates(&root_path, &names, &view_actions)?;
 
     crate::command_handlers::run_rustfmt(&root_path);
 

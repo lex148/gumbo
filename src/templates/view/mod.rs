@@ -1,3 +1,4 @@
+use crate::action::Action;
 use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::modrs::append_module;
@@ -5,6 +6,7 @@ use crate::templates::TemplateError;
 use std::path::Path;
 
 mod edit;
+mod empty;
 mod form;
 mod index;
 mod new;
@@ -26,6 +28,22 @@ pub(crate) fn write_crud_templates(
     let view_mod = &names.view_mod;
     append_module(root_path, "./src/views/mod.rs", view_mod)?;
 
+    Ok(())
+}
+
+pub(crate) fn write_empty_templates(
+    root_path: &Path,
+    names: &Names,
+    actions: &[Action],
+) -> Result<(), TemplateError> {
+    if actions.is_empty() {
+        return Ok(());
+    }
+    let view_mod_name = &names.view_mod;
+    append_module(root_path, "./src/views/mod.rs", view_mod_name)?;
+    for action in actions {
+        empty::write_template(root_path, names, action)?;
+    }
     Ok(())
 }
 

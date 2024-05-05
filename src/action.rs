@@ -1,9 +1,16 @@
+use cruet::Inflector;
 use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Action {
     pub name: String,
     pub method: String,
+}
+
+impl Action {
+    pub(crate) fn fn_name(&self) -> String {
+        self.name.to_snake_case()
+    }
 }
 
 impl FromStr for Action {
