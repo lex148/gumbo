@@ -21,5 +21,8 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<(), GenerateErro
     view::write_crud_templates(&root_path, &names, &fields)?;
     crate::command_handlers::run_rustfmt(&root_path);
 
+    println!("Scaffold Completed");
+    println!("Resorse: {name}");
+
     Ok(())
 }

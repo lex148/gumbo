@@ -29,5 +29,7 @@ pub(crate) fn generate(name: &str, actions: &[String]) -> Result<(), GenerateErr
 
     crate::command_handlers::run_rustfmt(&root_path);
 
+    println!("Controller Generate Completed");
+
     Ok(())
 }
