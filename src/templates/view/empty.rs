@@ -34,7 +34,6 @@ pub(crate) fn write_template(
 fn build_template(viewmod: &str, action: &str) -> String {
     format!(
         r#"
-use super::form::Form;
 use std::sync::Arc;
 use yew::prelude::*;
 

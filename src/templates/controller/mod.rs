@@ -6,6 +6,7 @@ use crate::action::Action;
 use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::main::append_service;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -33,6 +34,15 @@ pub(crate) fn write_template(
     super::ensure_directory_exists(&ctr_path)?;
 
     let mut parts = vec![HEAD.to_string()];
+
+    let new_methods: HashSet<_> = actions
+        .iter()
+        .map(|a| a.method.as_str())
+        .filter(|m| m != &"get" && m != &"post")
+        .collect();
+    for m in new_methods {
+        parts.push(format!("use actix_web::{m};"));
+    }
 
     // add an action for each action
     for action in actions {
