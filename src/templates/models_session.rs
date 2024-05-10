@@ -111,10 +111,10 @@ pub(crate) fn verify_auth_key() {
 fn auth_key() -> Vec<u8> {
     use base64::prelude::*;
     let key_base64 =
-        std::env::var("AUTH_SECRET").expect("AUTH_SECRET env not set. expected a AES_256_KEY");
+        std::env::var("AUTH_SECRET").expect("\n\nAUTH_SECRET env not set. expected a AES_256_KEY\nYou can generate an AUTH_SECRET for your gumbo project to use by running the command:\ngumbo generate env\n\n");
     let key_bytes = BASE64_STANDARD
         .decode(key_base64)
-        .expect("Failed to read env AUTH_SECRET. expected a AES_256_KEY");
+        .expect("\nFailed to read env AUTH_SECRET. expected a AES_256_KEY\nYou can generate an AUTH_SECRET for your gumbo project to use by running the command:\ngumbo generate env\n\n");
     assert_eq!(key_bytes.len(), 32, "Key must be 256 bits (32 bytes)");
     key_bytes
 }

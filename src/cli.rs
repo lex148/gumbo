@@ -47,4 +47,9 @@ pub(crate) enum GenerateCommands {
         /// List of actions the controller will respond to (index show new create edit update delete)
         actions: Vec<String>,
     },
+
+    #[clap(name = "env")]
+    /// Generate a .env file.
+    /// Setups an .env file will all the setting needed to boot up your gumbo app.
+    Env {},
 }

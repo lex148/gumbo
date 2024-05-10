@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 mod controller;
+pub(crate) mod dotenv;
 mod scaffold;
 
 #[derive(Debug, Error)]
@@ -33,6 +34,7 @@ fn run_inner(cmd: &GenerateCommands) -> Result<(), GenerateError> {
     match cmd {
         GenerateCommands::Controller { name, actions } => controller::generate(name, actions)?,
         GenerateCommands::Scaffold { name, fields } => scaffold::generate(name, fields)?,
+        GenerateCommands::Env {} => dotenv::generate()?,
     }
     Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::templates::{self, TemplateError};
+use crate::templates::TemplateError;
 use crate::templates::{
     asset_controller, auth_controller, build, docker, errors, greetings_controller, helpers_mod,
     inputcss, main, migrations, models_session, views_mod,
@@ -42,6 +42,7 @@ fn run_inner(path: &Path) -> Result<(), InitError> {
     docker::write_template(path).map_err(InitError::Template)?;
     main::write_template(path).map_err(InitError::Template)?;
     super::run_rustfmt(path);
+    crate::command_handlers::generate::dotenv::write_template(path).map_err(InitError::Template)?;
 
     Ok(())
 }

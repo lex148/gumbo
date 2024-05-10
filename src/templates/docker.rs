@@ -8,8 +8,26 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
     path.push("./Dockerfile");
     let mut file = File::create(path)?;
     file.write_all(CODE.trim().as_bytes())?;
+
+    let mut path_ignore = root_path.to_path_buf();
+    path_ignore.push("./.dockerignore");
+    let mut file_ignore = File::create(path_ignore)?;
+    file_ignore.write_all(IGNORE.trim().as_bytes())?;
+
     Ok(())
 }
+
+static IGNORE: &str = r#"
+# Ignore everything
+*
+
+# Allowed
+!/src
+!/Cargo.lock
+!/Cargo.toml
+!/build.rs
+!/tailwind.config.js
+"#;
 
 static CODE: &str = r#"
 FROM clux/muslrust:1.77.2-stable AS chef
@@ -41,6 +59,7 @@ FROM scratch AS runtime
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/server /app/server
 USER 1001
 ENV RUST_LOG="info,sqlx=warn"
+ENV HOST="0.0.0.0"
 ENTRYPOINT ["/app/server"]
 #CMD []
 "#;
