@@ -87,11 +87,20 @@ pub(crate) type DbClient = actix_web::web::Data<SqliteClient>;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
+    if let Err(err) = dotenvy::dotenv() {
+        match err {
+            dotenvy::Error::Io(_) => {}
+            _ => log::warn!("DOTENV: {:?}", err),
+        }
+    }
 
     // read the environment variables
     let port = env::var("PORT").unwrap_or_else(|_| "3000".to_owned());
     let host = env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_owned());
     let bind_interface: SocketAddr = format!("{}:{}", host, port).parse().unwrap();
+
+    // verify auth keys are setup
+    crate::models::session::verify_auth_key();
 
     // Connect to the database and run the migrations
     let connection_string =
@@ -109,6 +118,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(client.clone())
             .service(assets_controller::styles)
             .service(greetings_controller::index)
+            .service(greetings_controller::index_restricted)
+            .service(auth_controller::auth_login)
+            .service(auth_controller::auth_return)
+            .service(auth_controller::logout)
     })
     .bind(bind_interface)?
     .run()

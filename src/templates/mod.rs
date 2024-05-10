@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 pub(crate) mod asset_controller;
+pub(crate) mod auth_controller;
 pub(crate) mod build;
 pub(crate) mod controller;
 pub(crate) mod docker;
@@ -12,6 +13,7 @@ pub(crate) mod inputcss;
 pub(crate) mod main;
 pub(crate) mod migrations;
 pub(crate) mod models;
+pub(crate) mod models_session;
 pub(crate) mod modrs;
 pub(crate) mod view;
 pub(crate) mod views_mod;

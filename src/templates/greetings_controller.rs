@@ -32,15 +32,22 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
 }
 
 static CODE: &str = r#"
-use crate::errors::Result;
 use crate::helpers::render;
+use crate::{errors::Result, models::session::Session};
 use actix_web::{get, web::Path, HttpResponse};
 use welds::prelude::*;
 
 #[get("/")]
-async fn index() -> Result<HttpResponse> {
+async fn index(session: Option<Session>) -> Result<HttpResponse> {
     use crate::views::greetings::index::{View, ViewArgs};
-    let args = ViewArgs { };
+    let args = ViewArgs::new(session);
+    render::<View, _>(args).await
+}
+
+#[get("/restricted")]
+async fn index_restricted(session: Session) -> Result<HttpResponse> {
+    use crate::views::greetings::index::{View, ViewArgs};
+    let args = ViewArgs::new(Some(session));
     render::<View, _>(args).await
 }
 "#;
@@ -59,18 +66,41 @@ pub(crate) fn write_view_index(root_path: &Path) -> Result<(), TemplateError> {
 }
 
 static VIEW_CODE: &str = r#"
+use crate::models::session::Session;
 use crate::views::layouts::MainLayout;
+use std::sync::Arc;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
-pub struct ViewArgs { }
+pub struct ViewArgs {
+    session: Option<Arc<Session>>,
+}
+
+impl ViewArgs {
+    pub fn new(session: Option<Session>) -> ViewArgs {
+        ViewArgs {
+            session: session.map(Arc::new),
+        }
+    }
+}
 
 #[function_component]
 pub(crate) fn View(args: &ViewArgs) -> Html {
     html! {
-        <MainLayout>
-          <h1>{ format!("Hello, World") }</h1>
-        </MainLayout>
+      <MainLayout>
+        <h1>{ format!("Hello, World") }</h1>
+
+        if let Some(session) = args.session.clone() {
+           <br/>
+           <h1>{ format!("You are logged in as: {}", session.sub()) }</h1>
+           <br/>
+           <a href="/auth/logout" data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{"Logout"}</a>
+        } else {
+           <br/>
+           <a href="/auth/login/google" data-turbo="false">{"Login With Google"}</a>
+        }
+
+      </MainLayout>
     }
 }
 "#;

@@ -1,7 +1,7 @@
 use crate::templates::{self, TemplateError};
 use crate::templates::{
-    asset_controller, build, docker, errors, greetings_controller, helpers_mod, inputcss, main,
-    migrations, views_mod,
+    asset_controller, auth_controller, build, docker, errors, greetings_controller, helpers_mod,
+    inputcss, main, migrations, models_session, views_mod,
 };
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -31,11 +31,13 @@ fn run_inner(path: &Path) -> Result<(), InitError> {
     build::write_template(path).map_err(InitError::Template)?;
     inputcss::write_template(path).map_err(InitError::Template)?;
     asset_controller::write_template(path).map_err(InitError::Template)?;
+    auth_controller::write_template(path).map_err(InitError::Template)?;
     greetings_controller::write_template(path).map_err(InitError::Template)?;
     views_mod::write_template(path).map_err(InitError::Template)?;
     helpers_mod::write_template(path).map_err(InitError::Template)?;
     errors::write_template(path).map_err(InitError::Template)?;
     crate::templates::touch(path, "./src/models/mod.rs").map_err(InitError::Template)?;
+    models_session::write_template(path).map_err(InitError::Template)?;
     migrations::init::write_template(path).map_err(InitError::Template)?;
     docker::write_template(path).map_err(InitError::Template)?;
     main::write_template(path).map_err(InitError::Template)?;
@@ -86,6 +88,15 @@ fn cargo_init(path: &Path) -> Result<(), InitError> {
     add_dependencies(path, &["add", "serde"])?;
     add_dependencies(path, &["add", "pretty_env_logger"])?;
     add_dependencies(path, &["add", "yew", "--features=ssr"])?;
+    add_dependencies(path, &["add", "aes-gcm"])?;
+    add_dependencies(path, &["add", "base64"])?;
+    add_dependencies(path, &["add", "bincode"])?;
+    add_dependencies(path, &["add", "dotenvy"])?;
+    add_dependencies(path, &["add", "futures"])?;
+    add_dependencies(path, &["add", "oauth2"])?;
+    add_dependencies(path, &["add", "rand"])?;
+    // version 0.11 to match auth2
+    add_dependencies(path, &["add", "reqwest@0.11", "--features=json"])?;
 
     Ok(())
 }

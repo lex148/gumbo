@@ -13,12 +13,13 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
         .create(true)
         .open(&path)?;
 
-    file.write_all(CODE.as_bytes())?;
+    file.write_all(CODE.trim().as_bytes())?;
 
     Ok(())
 }
 
-static CODE: &str = r#"use actix_web::{
+static CODE: &str = r##"
+use actix_web::{
     http::{header::ContentType, StatusCode},
     HttpResponse, ResponseError,
 };
@@ -34,6 +35,18 @@ pub enum ServerError {
     InvalidData,
     #[error("Resource Not Found")]
     ResourceNotFound,
+    #[error("OAuth provider {0}: {1}")]
+    OAuth(String, String),
+}
+
+pub(crate) fn oauth_error<P, E>(provider: P, error: E) -> ServerError
+where
+    P: Into<String>,
+    E: Into<String>,
+{
+    let p: String = provider.into();
+    let err: String = error.into();
+    ServerError::OAuth(p, err)
 }
 
 // How the server should Response to an error in the system
@@ -41,6 +54,7 @@ impl ResponseError for ServerError {
     #[cfg(debug_assertions)]
     fn error_response(&self) -> HttpResponse {
         let error = format!("ERROR: {:?}", self);
+        log::error!("{}", error);
         HttpResponse::build(self.status_code())
             .insert_header(ContentType::html())
             .body(error)
@@ -48,6 +62,8 @@ impl ResponseError for ServerError {
 
     #[cfg(not(debug_assertions))]
     fn error_response(&self) -> HttpResponse {
+        let error = format!("ERROR: {:?}", self);
+        log::error!("{}", error);
         HttpResponse::build(self.status_code())
             .insert_header(ContentType::html())
             .body("")
@@ -55,6 +71,7 @@ impl ResponseError for ServerError {
 
     fn status_code(&self) -> StatusCode {
         match *self {
+            ServerError::OAuth(_, _) => StatusCode::INTERNAL_SERVER_ERROR,
             ServerError::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ServerError::InvalidData => StatusCode::UNPROCESSABLE_ENTITY,
             ServerError::ResourceNotFound => StatusCode::NOT_FOUND,
@@ -64,8 +81,15 @@ impl ResponseError for ServerError {
 
 impl From<welds::WeldsError> for ServerError {
     fn from(inner: welds::WeldsError) -> Self {
-        log::error!("{:?}", inner);
         ServerError::DatabaseError(inner)
     }
 }
-"#;
+
+impl From<oauth2::url::ParseError> for ServerError {
+    fn from(inner: oauth2::url::ParseError) -> Self {
+        let inner_err = format!("{:?}", inner);
+        ServerError::OAuth("???".to_owned(), inner_err)
+    }
+}
+
+"##;
