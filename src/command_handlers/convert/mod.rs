@@ -18,7 +18,8 @@ pub fn run(cmd: &ConvertCommands) {
 
 fn run_inner(cmd: &ConvertCommands) -> Result<(), GenerateError> {
     match cmd {
-        ConvertCommands::Mod2Dir { path } => mod2dir(path)?, //ConvertCommands::Dir2Mod {} => todo!(),
+        ConvertCommands::Mod2Dir { path } => mod2dir(path)?,
+        ConvertCommands::Dir2Mod { path } => dir2mod(path)?,
     }
     Ok(())
 }
@@ -66,6 +67,49 @@ fn mod2dir(path: &Path) -> Result<(), GenerateError> {
         .or(Err(GenerateError::Str("Unable to move file to directory")))?;
 
     println!("Converted {name}.rs to {name}/mod.rs");
+
+    Ok(())
+}
+
+fn dir2mod(path: &Path) -> Result<(), GenerateError> {
+    if !path.exists() {
+        Err(GenerateError::Str("Path does not exist"))?;
+    }
+    if !path.is_dir() {
+        Err(GenerateError::Str("Path is not a directory"))?;
+    }
+
+    let files = std::fs::read_dir(path).or(Err(GenerateError::Str("Path is not a directory")))?;
+    let mut files: Vec<_> = files.collect();
+    if files.len() != 1 {
+        Err(GenerateError::Str(
+            "Can only convert back to mod file if directory only contains mod.rs file",
+        ))?;
+    }
+    let contents: PathBuf = files.pop().unwrap().unwrap().path();
+
+    if !contents.as_path().is_file() {
+        Err(GenerateError::Str(
+            "Can only convert back to mod file if directory only contains mod.rs file",
+        ))?;
+    }
+
+    if contents.file_name().unwrap().to_string_lossy() != "mod.rs" {
+        Err(GenerateError::Str(
+            "Can only convert back to mod file if directory only contains mod.rs file",
+        ))?;
+    }
+
+    let name = path.file_name().unwrap().to_string_lossy().to_string();
+    let name = name.as_str();
+    let mut modpath = path.parent().unwrap().to_path_buf();
+    modpath.push(format!("{name}.rs"));
+
+    std::fs::rename(contents, modpath).or(Err(GenerateError::Str("Unable to move mod.rs")))?;
+
+    std::fs::remove_dir(path).or(Err(GenerateError::Str(
+        "Unable to cleanup the directory: {name}",
+    )))?;
 
     Ok(())
 }
