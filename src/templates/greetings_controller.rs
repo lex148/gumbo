@@ -88,17 +88,44 @@ impl ViewArgs {
 pub(crate) fn View(args: &ViewArgs) -> Html {
     html! {
       <MainLayout>
-        <h1>{ format!("Hello, World") }</h1>
 
-        if let Some(session) = args.session.clone() {
-           <br/>
-           <h1>{ format!("You are logged in as: {}", session.sub()) }</h1>
-           <br/>
-           <a href="/auth/logout" data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{"Logout"}</a>
-        } else {
-           <br/>
-           <a href="/auth/login/google" data-turbo="false">{"Login With Google"}</a>
-        }
+        <div class="flex flex-column justify-center items-center">
+          <img src="/assets/gumbo.webp" class="h-80 block "/>
+        </div>
+        <div class="flex flex-column justify-center items-center">
+          <h1 class="text-4xl">{ "Welcome to Gumbo" }</h1>
+        </div>
+
+        <div class="flex flex-column justify-center items-center">
+        <div class="max-w-lg">
+
+          if let Some(session) = args.session.clone() {
+            <br/>
+            <h1>{ format!("You are logged in as: {}", session.sub()) }</h1>
+            <br/>
+            <a href="/auth/logout" data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{"Logout"}</a>
+          } else {
+
+            <br/>
+            <a href="/auth/login/google" data-turbo="false">{"Login With Google"}</a>
+            <br/>
+            <div class="text-gray-600 text-sm">
+              <div>{"Setup of google OAuth is very simple. Just add the client_id/client_secret to your .env or ENV VARs."}</div>
+              <a href="https://www.youtube.com/watch?v=OKMgyF5ezFs" >{"Info about how to get an OAuth client_id/client_secret from google can be found here"}</a>
+            </div>
+
+            <br/>
+            <a href="/auth/login/fakeoauth" data-turbo="false">{"Login With FakeOAuth"}</a>
+            <br/>
+            <div class="text-gray-600 text-sm">
+              <div>{"FakeOAuth is a 'Fake' OAuth provider you can run locally while you build your app."}</div>
+              <div>{"You can run FakeOAuth in docker like this"}</div>
+              <div class="inline-block p-1 m-1 pt-2 bg-gray-200 text-gray-500 border border-gray-300 rounded-md ">{"docker run --rm -p \"127.0.0.1:5860:5860\" lex148/fakeoauth"}</div>
+            </div>
+          }
+
+        </div>
+        </div>
 
       </MainLayout>
     }

@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+pub(crate) mod fakeoauth;
 pub(crate) mod google;
 
 pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
@@ -19,11 +20,13 @@ static CODE: &str = r##"
 use crate::errors::{oauth_error, Result};
 use oauth2::basic::BasicClient;
 
+mod fakeoauth;
 mod google;
 
 pub(crate) fn build(provider: &str, siteroot: &str) -> Result<BasicClient> {
     let config = match provider {
         "google" => google::build(siteroot)?,
+        "fakeoauth" => fakeoauth::build(siteroot)?,
         _ => Err(oauth_error(provider, "PROVIDER NOT CONFIGURED"))?,
     };
     Ok(config)
@@ -32,6 +35,7 @@ pub(crate) fn build(provider: &str, siteroot: &str) -> Result<BasicClient> {
 pub(crate) async fn get_unique_id(provider: &str, access_token: &str) -> Result<String> {
     let config = match provider {
         "google" => google::get_unique_id(access_token).await?,
+        "fakeoauth" => fakeoauth::get_unique_id(access_token).await?,
         _ => Err(oauth_error(provider, "PROVIDER NOT CONFIGURED"))?,
     };
     Ok(config)
@@ -40,6 +44,7 @@ pub(crate) async fn get_unique_id(provider: &str, access_token: &str) -> Result<
 pub(crate) fn get_scopes(provider: &str) -> Result<&'static [&'static str]> {
     let scopes = match provider {
         "google" => &["email"],
+        "fakeoauth" => &["fake"],
         _ => Err(oauth_error(provider, "PROVIDER NOT CONFIGURED"))?,
     };
     Ok(scopes)

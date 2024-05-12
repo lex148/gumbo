@@ -17,6 +17,7 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
     //
     providers::write_template(root_path)?;
     providers::google::write_template(root_path)?;
+    providers::fakeoauth::write_template(root_path)?;
     Ok(())
 }
 

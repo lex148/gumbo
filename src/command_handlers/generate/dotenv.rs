@@ -46,8 +46,8 @@ fn build_envfile() -> String {
     format!(
         r##"
 # If you want to login with google. Add your oauth2 id/secret here.
-OAUTH_GOOGLE_CLIENT_ID=
-OAUTH_GOOGLE_CLIENT_SECRET=
+OAUTH_GOOGLE_CLIENT_ID=""
+OAUTH_GOOGLE_CLIENT_SECRET=""
 
 #openssl rand -base64 32
 AUTH_SECRET={auth_secret}

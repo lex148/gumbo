@@ -38,6 +38,7 @@ fn build_crud_template(names: &Names) -> String {
     format!(
         r#"
 use crate::models::{modelmod}::{modelstruct};
+use crate::views::layouts::MainLayout;
 use super::form::Form;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -57,7 +58,9 @@ pub(crate) fn Edit(args: &ViewArgs) -> Html {{
     let route = format!("/{action}/{{}}", args.{modelmod}.id );
     html! {{
         <>
+          <MainLayout>
             <Form action={{ route }} method={{"PATCH"}} {modelmod}={{ args.{modelmod}.clone() }} />
+          </MainLayout>
         </>
     }}
 }}

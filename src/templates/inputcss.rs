@@ -22,6 +22,15 @@ pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
 static CODE: &str = r#"@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  a {
+    @apply text-pink-600;
+  }
+  a:hover {
+    @apply text-pink-800;
+  }
+}
 "#;
 
 pub(crate) fn tailwindcfg(root_path: &Path) -> Result<(), TemplateError> {

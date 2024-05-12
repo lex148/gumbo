@@ -57,6 +57,7 @@ RUN strip /app/target/x86_64-unknown-linux-musl/release/server
 # Build runtime image
 FROM scratch AS runtime
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/server /app/server
+COPY --from=builder /app/src/assets /src/assets
 USER 1001
 ENV RUST_LOG="info,sqlx=warn"
 ENV HOST="0.0.0.0"

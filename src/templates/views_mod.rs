@@ -62,7 +62,7 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {
           <link rel="icon" href="./favicon.ico" type="image/x-icon" />
           <script defer=true src={turbo} />
         </head>
-        <body>
+        <body class="bg-[#fff9de]">
           <main>
               { props.children.clone() }
           </main>

@@ -38,6 +38,7 @@ fn build_crud_template(names: &Names) -> String {
     format!(
         r#"
 use crate::models::{modelmod}::{modelstruct};
+use crate::views::layouts::MainLayout;
 use super::form::Form;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -52,7 +53,9 @@ pub(crate) struct ViewArgs {{
 pub(crate) fn New(args: &ViewArgs) -> Html {{
     html! {{
         <>
+          <MainLayout>
             <Form action={{ "/{action}" }} method={{"POST"}} {modelmod}={{ args.{modelmod}.clone() }} />
+          </MainLayout>
         </>
     }}
 }}

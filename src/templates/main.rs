@@ -117,6 +117,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(client.clone())
             .service(assets_controller::styles)
+            // serve the contents of the assets directory to the public
+            .service(actix_files::Files::new("/assets", "./src/assets"))
             .service(greetings_controller::index)
             .service(greetings_controller::index_restricted)
             .service(auth_controller::auth_login)
