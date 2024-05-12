@@ -1,3 +1,4 @@
+pub(crate) mod convert;
 pub(crate) mod generate;
 pub(crate) mod init;
 use std::path::Path;

@@ -23,6 +23,13 @@ pub(crate) enum RootCommand {
         #[clap(subcommand)]
         sub_cmd: GenerateCommands,
     },
+
+    /// Automatically Convert you code
+    #[clap(name = "convert", alias = "c")]
+    Convert {
+        #[clap(subcommand)]
+        sub_cmd: ConvertCommands,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -52,4 +59,14 @@ pub(crate) enum GenerateCommands {
     /// Generate a .env file.
     /// Setups an .env file will all the setting needed to boot up your gumbo app.
     Env {},
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ConvertCommands {
+    #[clap(name = "mod2dir")]
+    /// Convert a code file "bla.rs" into a folder/mod bla/mod.rs
+    Mod2Dir { path: PathBuf },
+    // #[clap(name = "dir2mod")]
+    // /// Convert a code folder/mod.rs "bla/mod.rs" into a sinple file bla.rs
+    // Dir2Mod {},
 }
