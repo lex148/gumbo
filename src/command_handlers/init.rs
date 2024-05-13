@@ -3,6 +3,8 @@ use crate::templates::{
     asset_controller, auth_controller, build, docker, errors, greetings_controller, helpers_mod,
     inputcss, main, migrations, models_session, views_mod,
 };
+use std::fs::File;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use thiserror::Error;
@@ -15,6 +17,8 @@ enum InitError {
     DependenciesFailed(String),
     #[error("{0}")]
     Template(TemplateError),
+    #[error("{0}")]
+    IoError(std::io::Error),
 }
 
 /// Called to to crate a new gumbo project
@@ -43,7 +47,21 @@ fn run_inner(path: &Path) -> Result<(), InitError> {
     main::write_template(path).map_err(InitError::Template)?;
     super::run_rustfmt(path);
     crate::command_handlers::generate::dotenv::write_template(path).map_err(InitError::Template)?;
+    append_gitignore(path)?;
 
+    Ok(())
+}
+
+fn append_gitignore(root_path: &Path) -> Result<(), InitError> {
+    let mut path = root_path.to_path_buf();
+    path.push("./.gitignore");
+    let mut file = File::options()
+        .append(true)
+        .open(path)
+        .map_err(InitError::IoError)?;
+    let content = "\n.env\n";
+    file.write_all(content.as_bytes())
+        .map_err(InitError::IoError)?;
     Ok(())
 }
 
