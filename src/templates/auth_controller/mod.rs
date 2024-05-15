@@ -1,27 +1,18 @@
-use super::ensure_directory_exists;
-use super::modrs::append_module;
-use super::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
 mod providers;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/controllers/auth_controller/mod.rs");
-    ensure_directory_exists(&path)?;
-    append_module(root_path, "./src/controllers/mod.rs", "auth_controller")?;
-    let mut file = File::create(&path)?;
-    file.write_all(CONTROLLER.trim().as_bytes())?;
-    //
-    providers::write_template(root_path)?;
-    providers::google::write_template(root_path)?;
-    providers::fakeoauth::write_template(root_path)?;
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![
+        Change::new("./src/controllers/auth_controller/mod.rs", CODE)?.add_parent_mod(),
+        providers::write_template()?,
+        providers::google::write_template()?,
+        providers::fakeoauth::write_template()?,
+    ])
 }
 
-static CONTROLLER: &str = r##"
+static CODE: &str = r##"
 use crate::errors::{oauth_error, Result};
 use crate::models::session::Session;
 use actix_web::cookie::time::OffsetDateTime;

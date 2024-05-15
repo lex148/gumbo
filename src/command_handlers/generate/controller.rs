@@ -1,13 +1,14 @@
 use super::get_root_path;
 use crate::action::Action;
-use crate::command_handlers::generate::GenerateError;
+use crate::change::{write_to_disk, Change};
+use crate::errors::Result;
 use crate::names::Names;
 use crate::templates;
 use std::str::FromStr;
 use templates::controller;
 use templates::view;
 
-pub(crate) fn generate(name: &str, actions: &[String]) -> Result<(), GenerateError> {
+pub(crate) fn generate(name: &str, actions: &[String]) -> Result<()> {
     let name = name.trim().to_lowercase();
     let root_path = get_root_path()?;
     let names = Names::new(&name);
@@ -17,19 +18,27 @@ pub(crate) fn generate(name: &str, actions: &[String]) -> Result<(), GenerateErr
         .filter_map(|x| Action::from_str(x.as_str()).ok())
         .collect();
 
-    controller::write_template(&root_path, &names, &actions)?;
+    let mut changes: Vec<Vec<Change>> = vec![controller::write_template(&names, &actions)?];
 
     let view_actions: Vec<_> = actions
         .iter()
         .filter(|a| a.method == "get")
         .cloned()
         .collect();
+    if !view_actions.is_empty() {
+        changes.push(view::write_empty_templates(&names, &view_actions)?);
+    }
 
-    view::write_empty_templates(&root_path, &names, &view_actions)?;
+    for change in changes.iter().flatten() {
+        println!("FILE: {:?}", change.file());
+    }
 
-    crate::command_handlers::run_rustfmt(&root_path);
+    for change in changes.iter().flatten() {
+        write_to_disk(&root_path, change)?;
+    }
 
     println!("Controller Generate Completed");
+    crate::command_handlers::run_rustfmt(&root_path);
 
     Ok(())
 }

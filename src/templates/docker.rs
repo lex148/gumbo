@@ -1,20 +1,11 @@
-use super::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./Dockerfile");
-    let mut file = File::create(path)?;
-    file.write_all(CODE.trim().as_bytes())?;
-
-    let mut path_ignore = root_path.to_path_buf();
-    path_ignore.push("./.dockerignore");
-    let mut file_ignore = File::create(path_ignore)?;
-    file_ignore.write_all(IGNORE.trim().as_bytes())?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![
+        Change::new("./Dockerfile", CODE)?,
+        Change::new("./.dockerignore", IGNORE)?,
+    ])
 }
 
 static IGNORE: &str = r#"

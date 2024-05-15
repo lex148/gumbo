@@ -1,21 +1,9 @@
-use super::{ensure_directory_exists, TemplateError};
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/errors.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-
-    file.write_all(CODE.trim().as_bytes())?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    let c = Change::new("./src/errors.rs", CODE)?;
+    Ok(vec![c])
 }
 
 static CODE: &str = r##"

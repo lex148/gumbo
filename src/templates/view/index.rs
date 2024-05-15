@@ -1,35 +1,15 @@
 use codegen::{Impl, Scope, Struct};
 
 use super::usings;
+use crate::change::Change;
+use crate::errors::Result;
 use crate::names::Names;
-use crate::templates::ensure_directory_exists;
-use crate::templates::modrs::append_module;
-use crate::templates::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
 /// Writes all the actions views
-pub(crate) fn write_crud_template(root_path: &Path, names: &Names) -> Result<(), TemplateError> {
-    // the this module
-    let view_mod = format!("./src/views/{}/mod.rs", &names.view_mod);
-    append_module(root_path, &view_mod, "index")?;
-
+pub(crate) fn write_crud_template(names: &Names) -> Result<Change> {
+    let path = format!("./src/views/{}/index.rs", &names.view_mod);
     let code = build_crud_template(names);
-
-    let action_path = format!("./src/views/{}/index.rs", &names.view_mod);
-    let mut path = root_path.to_path_buf();
-    path.push(action_path);
-    ensure_directory_exists(&path)?;
-
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(path)?;
-    file.write_all(code.as_bytes())?;
-
-    Ok(())
+    Ok(Change::new(path, code)?.add_parent_mod())
 }
 
 fn view_args(names: &Names) -> Struct {

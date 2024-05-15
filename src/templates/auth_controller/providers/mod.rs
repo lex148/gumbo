@@ -1,19 +1,11 @@
-use crate::templates::ensure_directory_exists;
-use crate::templates::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
 pub(crate) mod fakeoauth;
 pub(crate) mod google;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/controllers/auth_controller/providers/mod.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::create(&path)?;
-    file.write_all(CODE.trim().as_bytes())?;
-    Ok(())
+pub(crate) fn write_template() -> Result<Change> {
+    Change::new("./src/controllers/auth_controller/providers/mod.rs", CODE)
 }
 
 static CODE: &str = r##"

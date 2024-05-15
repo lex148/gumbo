@@ -1,28 +1,39 @@
 use super::get_root_path;
-use crate::command_handlers::generate::GenerateError;
+use crate::change::write_to_disk;
+use crate::errors::Result;
 use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::{controller, migrations, models, view};
 use std::str::FromStr;
 
-pub(crate) fn generate(name: &str, fields: &[String]) -> Result<(), GenerateError> {
+pub(crate) fn generate(name: &str, fields: &[String]) -> Result<()> {
     let root_path = get_root_path()?;
     let names = Names::new(name);
 
-    let fields: Result<Vec<Field>, _> = fields.iter().map(|s| Field::from_str(s)).collect();
+    let fields: std::result::Result<Vec<Field>, _> =
+        fields.iter().map(|s| Field::from_str(s)).collect();
 
-    //TODO: display a better message why it can scaffold
-    let fields = fields.expect("Error: unknown type in fields");
+    let fields = fields?;
 
-    models::write_template(&root_path, &names, &fields)?;
-    migrations::create_table::write_template(&root_path, &names, &fields)?;
+    let changes = [
+        models::write_template(&names, &fields)?,
+        migrations::create_table::write_template(&root_path, &names, &fields)?,
+        controller::write_crud_templates(&names, &fields)?,
+        view::write_crud_templates(&names, &fields)?,
+    ];
 
-    controller::write_crud_templates(&root_path, &names, &fields)?;
-    view::write_crud_templates(&root_path, &names, &fields)?;
-    crate::command_handlers::run_rustfmt(&root_path);
+    for change in changes.as_ref().iter().flatten() {
+        println!("FILE: {:?}", change.file());
+    }
+
+    for change in changes.as_ref().iter().flatten() {
+        write_to_disk(&root_path, change)?;
+    }
 
     println!("Scaffold Completed");
     println!("Resorse: {name}");
+
+    crate::command_handlers::run_rustfmt(&root_path);
 
     Ok(())
 }

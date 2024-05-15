@@ -1,15 +1,10 @@
-use cruet::Inflector;
-
-use super::modrs::append_module;
-use super::TemplateError;
 use crate::action::Action;
+use crate::change::Change;
+use crate::errors::Result;
 use crate::fields::Field;
 use crate::names::Names;
-use crate::templates::main::append_service;
+use cruet::Inflector;
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
 mod create;
 mod edit;
@@ -18,20 +13,9 @@ mod index;
 mod new;
 mod update;
 
-pub(crate) fn write_template(
-    root_path: &Path,
-    names: &Names,
-    actions: &[Action],
-) -> Result<(), TemplateError> {
+pub(crate) fn write_template(names: &Names, actions: &[Action]) -> Result<Vec<Change>> {
     let ctr_name = &names.controller_mod;
-
-    // add the controller to the module
-    append_module(root_path, "./src/controllers/mod.rs", ctr_name)?;
-
-    // make sure the controller file exists. Adds the use as the top
-    let mut ctr_path = root_path.to_path_buf();
-    ctr_path.push(format!("./src/controllers/{ctr_name}/mod.rs"));
-    super::ensure_directory_exists(&ctr_path)?;
+    let path = format!("./src/controllers/{ctr_name}/mod.rs");
 
     let mut parts = vec![HEAD.to_string()];
 
@@ -43,28 +27,30 @@ pub(crate) fn write_template(
     for m in new_methods {
         parts.push(format!("use actix_web::{m};"));
     }
-
-    // add an action for each action
+    // add the code for each action
     for action in actions {
         parts.push("".to_owned());
         parts.push(empty::template(names, action));
-        let actionname = action.name.to_snake_case();
-        append_service(root_path, format!("{ctr_name}::{actionname}"))?;
     }
 
-    let mut file = File::create(ctr_path)?;
     let code = parts.join("\n");
-    file.write_all(code.as_bytes())?;
+    let mut changes = vec![Change::new(path, code)?.add_parent_mod()];
 
-    Ok(())
+    // wireup each action to actix
+    for action in actions {
+        let actionname = action.name.to_snake_case();
+        let route = format!("{ctr_name}::{actionname}");
+        changes.push(Change::append_service(route)?);
+    }
+
+    Ok(changes)
 }
 
 /// Writes all the actions fully build wired up with views
 pub(crate) fn write_crud_templates(
-    root_path: &Path,
     names: &Names,
     fields: &[Field],
-) -> Result<(), TemplateError> {
+) -> crate::errors::Result<Vec<Change>> {
     let usemodel = format!(
         "use crate::models::{}::{};",
         &names.model_mod, &names.model_struct
@@ -85,46 +71,19 @@ pub(crate) fn write_crud_templates(
         "".to_owned(),
         update::crud_template(names),
     ];
-
-    let ctr_name = &names.controller_mod;
-    append_service(root_path, format!("{ctr_name}::index"))?;
-    append_service(root_path, format!("{ctr_name}::new"))?;
-    append_service(root_path, format!("{ctr_name}::create"))?;
-    append_service(root_path, format!("{ctr_name}::edit"))?;
-    append_service(root_path, format!("{ctr_name}::update"))?;
-
-    // add the controller to the module
-    let ctr_name = &names.controller_mod;
-    append_module(root_path, "./src/controllers/mod.rs", ctr_name)?;
-
-    // write the contents to the controller file
-    let mut ctr_path = root_path.to_path_buf();
-    ctr_path.push(&names.controller_path);
-    super::ensure_directory_exists(&ctr_path)?;
-
-    let mut file = File::create(ctr_path)?;
     let code = parts.join("\n");
-    file.write_all(code.as_bytes())?;
+    let ctr_name = &names.controller_mod;
 
-    // Add the params models
-    create::write_params(root_path, names, fields)?;
-    update::write_params(root_path, names, fields)?;
-
-    Ok(())
-}
-
-// A simple implementation of `% touch path` (ignores existing files)
-fn write_head(path: &Path) -> std::io::Result<()> {
-    if path.exists() {
-        return Ok(());
-    }
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(path)?;
-    file.write_all(HEAD.as_bytes())?;
-    Ok(())
+    Ok(vec![
+        Change::new_from_path(&names.controller_path, code)?.add_parent_mod(),
+        Change::append_service(format!("{ctr_name}::index"))?,
+        Change::append_service(format!("{ctr_name}::new"))?,
+        Change::append_service(format!("{ctr_name}::create"))?,
+        Change::append_service(format!("{ctr_name}::edit"))?,
+        Change::append_service(format!("{ctr_name}::update"))?,
+        create::write_params(names, fields)?,
+        update::write_params(names, fields)?,
+    ])
 }
 
 static HEAD: &str = "use crate::errors::{Result, ServerError};

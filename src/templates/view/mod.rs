@@ -1,9 +1,8 @@
 use crate::action::Action;
+use crate::change::Change;
+use crate::errors::Result;
 use crate::fields::Field;
 use crate::names::Names;
-use crate::templates::modrs::append_module;
-use crate::templates::TemplateError;
-use std::path::Path;
 
 mod edit;
 mod empty;
@@ -13,38 +12,31 @@ mod new;
 mod single;
 
 /// Writes all the actions views
-pub(crate) fn write_crud_templates(
-    root_path: &Path,
-    names: &Names,
-    fields: &[Field],
-) -> Result<(), TemplateError> {
-    single::write_crud_template(root_path, names, fields)?;
-    index::write_crud_template(root_path, names)?;
-    form::write_crud_template(root_path, names, fields)?;
-    new::write_crud_template(root_path, names, fields)?;
-    edit::write_crud_template(root_path, names, fields)?;
-
-    // add this view mod to the module of all views
-    let view_mod = &names.view_mod;
-    append_module(root_path, "./src/views/mod.rs", view_mod)?;
-
-    Ok(())
+pub(crate) fn write_crud_templates(names: &Names, fields: &[Field]) -> Result<Vec<Change>> {
+    let view_mod = format!("./src/views/{}/mod.rs", &names.view_mod);
+    Ok(vec![
+        Change::new(view_mod, "")?.append().add_parent_mod(),
+        single::write_crud_template(names, fields)?,
+        index::write_crud_template(names)?,
+        form::write_crud_template(names, fields)?,
+        new::write_crud_template(names, fields)?,
+        edit::write_crud_template(names, fields)?,
+    ])
 }
 
-pub(crate) fn write_empty_templates(
-    root_path: &Path,
-    names: &Names,
-    actions: &[Action],
-) -> Result<(), TemplateError> {
+pub(crate) fn write_empty_templates(names: &Names, actions: &[Action]) -> Result<Vec<Change>> {
     if actions.is_empty() {
-        return Ok(());
+        return Ok(Vec::default());
     }
     let view_mod_name = &names.view_mod;
-    append_module(root_path, "./src/views/mod.rs", view_mod_name)?;
+    let mut changes = Vec::with_capacity(actions.len() + 1);
+    let path = format!("./src/views/{view_mod_name}/mod.rs");
+    changes.push(Change::new(path, "")?.append().add_parent_mod());
+
     for action in actions {
-        empty::write_template(root_path, names, action)?;
+        changes.push(empty::write_template(names, action)?);
     }
-    Ok(())
+    Ok(changes)
 }
 
 /// write the `use` code that includes the model

@@ -1,33 +1,12 @@
-use crate::fields::{Field, Type};
+use crate::change::Change;
+use crate::errors::Result;
+use crate::fields::Field;
 use crate::names::Names;
-use crate::templates::ensure_directory_exists;
-use crate::templates::modrs::append_module;
-use crate::templates::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
-/// Writes all the actions views
-pub(crate) fn write_crud_template(
-    root_path: &Path,
-    names: &Names,
-    _fields: &[Field],
-) -> Result<(), TemplateError> {
-    // the this module
-    let view_mod = format!("./src/views/{}/mod.rs", &names.view_mod);
-    append_module(root_path, &view_mod, "edit")?;
-
+pub(crate) fn write_crud_template(names: &Names, _fields: &[Field]) -> Result<Change> {
+    let path = format!("./src/views/{}/edit.rs", &names.view_mod);
     let code = build_crud_template(names);
-
-    let action_path = format!("./src/views/{}/edit.rs", &names.view_mod);
-    let mut path = root_path.to_path_buf();
-    path.push(action_path);
-    ensure_directory_exists(&path)?;
-
-    let mut file = File::create(path)?;
-    file.write_all(code.trim().as_bytes())?;
-
-    Ok(())
+    Ok(Change::new(path, code)?.add_parent_mod())
 }
 
 fn build_crud_template(names: &Names) -> String {

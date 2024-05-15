@@ -1,7 +1,6 @@
-use crate::templates::TemplateError;
+use crate::change::Change;
+use crate::errors::Result;
 use crate::{fields::Field, names::Names};
-use codegen::Scope;
-use std::{fs::File, io::Write, path::Path};
 
 pub(crate) fn crud_template(names: &Names) -> String {
     let indexaction = &names.view_mod;
@@ -21,18 +20,11 @@ pub(crate) async fn create(db: DbClient, params: Form<CreateParams>) -> Result<H
     )
 }
 
-pub(crate) fn write_params(
-    root_path: &Path,
-    names: &Names,
-    fields: &[Field],
-) -> Result<(), TemplateError> {
+pub(crate) fn write_params(names: &Names, fields: &[Field]) -> Result<Change> {
     let ctr_name = &names.controller_mod;
-    let mut path = root_path.to_path_buf();
-    path.push(format!("./src/controllers/{ctr_name}/create_params.rs"));
-    let mut file = File::create(path)?;
+    let path = format!("./src/controllers/{ctr_name}/create_params.rs");
     let code = build_params(names, fields);
-    file.write_all(code.trim().as_bytes())?;
-    Ok(())
+    Ok(Change::new(path, code)?.add_parent_mod())
 }
 
 pub(crate) fn build_params(names: &Names, fields: &[Field]) -> String {
@@ -69,7 +61,6 @@ impl CreateParams {{
 fn build_field_set(names: &Names, field: &Field) -> String {
     let model = &names.model_mod;
     let f = &field.name;
-    let mut ty = field.ty.rust_type().to_owned();
     format!("        {model}.{f} = self.{f}.clone();")
 }
 

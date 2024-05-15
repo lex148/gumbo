@@ -1,40 +1,29 @@
+use crate::change::Change;
+use crate::errors::Result;
 use crate::fields::Field;
 use crate::names::Names;
 use crate::templates::migrations::migration_list_append;
-use crate::templates::modrs::append_module;
-use crate::templates::TemplateError;
-use std::fs::File;
-use std::io::Write;
 use std::path::Path;
 
 pub(crate) fn write_template(
-    root_path: &Path,
+    rootpath: &Path,
     names: &Names,
     fields: &[Field],
-) -> Result<(), TemplateError> {
+) -> Result<Vec<Change>> {
     let stamp = super::timestamp();
     let tablename = &names.table_name;
     let migration_name = format!("m{stamp}_create_table_{tablename}");
 
-    let mut path = root_path.to_path_buf();
-    path.push(format!("./src/migrations/{migration_name}.rs"));
-    append_module(root_path, "./src/migrations/mod.rs", &migration_name)?;
-
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
+    let path = format!("./src/migrations/{migration_name}.rs");
     let code = build(names, fields)?;
-    file.write_all(code.as_bytes())?;
 
-    let modpath = format!("{migration_name}::step");
-    migration_list_append(root_path, &modpath)?;
-
-    Ok(())
+    Ok(vec![
+        Change::new_from_path(path, code)?,
+        migration_list_append(rootpath, &migration_name)?,
+    ])
 }
 
-fn build(names: &Names, fields: &[Field]) -> Result<String, TemplateError> {
+fn build(names: &Names, fields: &[Field]) -> Result<String> {
     let tablename = &names.table_name;
     let mut parts = vec![HEAD.trim().to_owned(), fn_name(names)];
     parts.push(format!("\n    let m = create_table(\"{tablename}\")"));
@@ -56,8 +45,7 @@ use welds::migrations::{create_table, types::Type, MigrationFn, MigrationStep, T
 
 "#;
 
-fn fn_name(name: &Names) -> String {
-    let name = &name.table_name;
+fn fn_name(_name: &Names) -> String {
     format!("\n\npub(super) fn step(_state: &TableState) -> Result<MigrationStep> {{")
 }
 

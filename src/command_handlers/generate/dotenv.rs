@@ -1,37 +1,23 @@
 use super::get_root_path;
-use crate::command_handlers::generate::GenerateError;
-use crate::templates::TemplateError;
+use crate::change::{write_to_disk, Change};
+use crate::errors::Result;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use rand::{rngs::OsRng, RngCore};
-use std::path::Path;
-use std::{fs::File, io::Write};
 
-pub(crate) fn generate() -> Result<(), GenerateError> {
-    let root_path = get_root_path()?;
-
+pub(crate) fn generate() -> Result<()> {
+    let rootpath = get_root_path().unwrap();
     println!("A .env was create.");
+    let changes: Vec<Change> = write_template().expect("unable to write .env file");
 
-    write_template(&root_path).expect("unable to write .env file");
+    for change in &changes {
+        write_to_disk(&rootpath, change)?;
+    }
 
     Ok(())
 }
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut envpath = root_path.to_path_buf();
-    envpath.push(".env");
-
-    // Don't override the users .env file if it exists
-    if envpath.exists() {
-        eprintln!("A .env already exists file. unable to generate the file:");
-        eprintln!("{}", envpath.to_str().unwrap_or_default());
-        std::process::exit(1);
-    }
-
-    let content = build_envfile();
-    let mut file = File::create(envpath)?;
-    file.write_all(&content.as_bytes())?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![Change::new("./.env", build_envfile())?])
 }
 
 fn rand_auth_secret() -> String {

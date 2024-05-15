@@ -3,8 +3,10 @@ use clap::Parser;
 use crate::cli::RootCommand;
 
 pub(crate) mod action;
+pub(crate) mod change;
 pub(crate) mod cli;
 pub(crate) mod command_handlers;
+pub(crate) mod errors;
 pub(crate) mod fields;
 pub(crate) mod names;
 pub(crate) mod templates;

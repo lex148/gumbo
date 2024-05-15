@@ -1,9 +1,10 @@
 pub(crate) mod create_table;
 pub(crate) mod init;
-use crate::templates::TemplateError;
+use crate::change::Change;
+use crate::errors::Result;
 use chrono::{DateTime, Datelike, Local, Timelike};
 use std::fs::File;
-use std::io::{Read, Seek, Write};
+use std::io::{Read, Seek};
 use std::path::Path;
 
 pub(crate) fn timestamp() -> String {
@@ -25,12 +26,10 @@ pub(crate) fn timestamp() -> String {
 }
 
 /// Appends a migration to the list of migrations that should be ran
-pub(crate) fn migration_list_append(
-    root_path: &Path,
-    migration_name: &str,
-) -> Result<(), TemplateError> {
+pub(crate) fn migration_list_append(root_path: &Path, migration_name: &str) -> Result<Change> {
     let mut path = root_path.to_path_buf();
     path.push("./src/migrations/mod.rs");
+    let modpath = format!("{migration_name}::step");
 
     let mut file = File::options().write(true).read(true).open(&path)?;
     file.rewind()?;
@@ -46,17 +45,16 @@ pub(crate) fn migration_list_append(
         .split('\n')
         .map(|l| l.trim().trim_end_matches(','))
         .filter(|l| !l.is_empty())
-        .chain([migration_name])
+        .chain([modpath.as_str()])
         .map(|l| format!("        {l},"))
         .collect();
     let lines = lines.join("\n");
 
     // Replace the marker with `to_insert + marker`
-    let modified_content = content.replace(&to_remove, &format!("\n{}{}", lines, marker));
+    let mut modified_content = content.replace(&to_remove, &format!("\n{}{}", lines, marker));
+    modified_content = format!("{modified_content}\nmod {migration_name};");
 
-    //let mut file = File::options().truncate(true).create(true).open(&path)?;
-    file.write_all(modified_content.as_bytes())?;
-    Ok(())
+    Ok(Change::new("./src/migrations/mod.rs", modified_content)?)
 }
 
 /// returns everything between the opening !vec[ and the marker

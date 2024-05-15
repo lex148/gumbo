@@ -1,26 +1,11 @@
 use crate::cli::GenerateCommands;
-use crate::templates::TemplateError;
 use std::fs;
 use std::path::{Path, PathBuf};
-use thiserror::Error;
 
 mod controller;
 pub(crate) mod dotenv;
 mod scaffold;
-
-#[derive(Debug, Error)]
-enum GenerateError {
-    #[error("Could Not find the root of your project. Are you in a Gumbo project?")]
-    NoRootPath,
-    #[error("{0}")]
-    Template(TemplateError),
-}
-
-impl From<TemplateError> for GenerateError {
-    fn from(inner: TemplateError) -> Self {
-        GenerateError::Template(inner)
-    }
-}
+use crate::errors::Result;
 
 /// Called to to crate a new gumbo project
 pub fn run(cmd: &GenerateCommands) {
@@ -30,7 +15,7 @@ pub fn run(cmd: &GenerateCommands) {
     }
 }
 
-fn run_inner(cmd: &GenerateCommands) -> Result<(), GenerateError> {
+fn run_inner(cmd: &GenerateCommands) -> Result<()> {
     match cmd {
         GenerateCommands::Controller { name, actions } => controller::generate(name, actions)?,
         GenerateCommands::Scaffold { name, fields } => scaffold::generate(name, fields)?,
@@ -39,8 +24,9 @@ fn run_inner(cmd: &GenerateCommands) -> Result<(), GenerateError> {
     Ok(())
 }
 
-fn get_root_path() -> Result<PathBuf, GenerateError> {
-    let path = fs::canonicalize(PathBuf::from("./")).map_err(|_| GenerateError::NoRootPath)?;
+fn get_root_path() -> crate::errors::Result<PathBuf> {
+    let path = fs::canonicalize(PathBuf::from("./"))
+        .or(Err(crate::errors::GumboError::InvalidRootPath))?;
     let mut parent: Option<&Path> = Some(&path);
     while let Some(p) = parent {
         let mut toml = path.clone();
@@ -52,5 +38,5 @@ fn get_root_path() -> Result<PathBuf, GenerateError> {
         }
         parent = p.parent();
     }
-    Err(GenerateError::NoRootPath)
+    Err(crate::errors::GumboError::InvalidRootPath)
 }

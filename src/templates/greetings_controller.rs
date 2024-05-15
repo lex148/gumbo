@@ -1,34 +1,12 @@
-use super::ensure_directory_exists;
-use super::modrs::append_module;
-use super::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/controllers/greetings_controller.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-
-    file.write_all(CODE.as_bytes())?;
-
-    append_module(
-        root_path,
-        "./src/controllers/mod.rs",
-        "greetings_controller",
-    )?;
-
-    append_module(root_path, "./src/views/mod.rs", "greetings")?;
-    append_module(root_path, "./src/views/greetings/mod.rs", "index")?;
-
-    write_view_index(root_path)?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![
+        Change::new("./src/controllers/greetings_controller.rs", CODE)?.add_parent_mod(),
+        Change::new("./src/views/greetings/mod.rs", "")?.add_parent_mod(),
+        Change::new("./src/views/greetings/index.rs", VIEW)?.add_parent_mod(),
+    ])
 }
 
 static CODE: &str = r#"
@@ -52,20 +30,7 @@ async fn index_restricted(session: Session) -> Result<HttpResponse> {
 }
 "#;
 
-pub(crate) fn write_view_index(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/views/greetings/index.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-    file.write_all(VIEW_CODE.as_bytes())?;
-    Ok(())
-}
-
-static VIEW_CODE: &str = r#"
+static VIEW: &str = r#"
 use crate::models::session::Session;
 use crate::views::layouts::MainLayout;
 use std::sync::Arc;

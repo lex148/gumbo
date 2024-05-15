@@ -1,3 +1,4 @@
+use crate::errors::GumboError;
 use cruet::Inflector;
 use std::str::FromStr;
 
@@ -14,7 +15,7 @@ impl Action {
 }
 
 impl FromStr for Action {
-    type Err = ();
+    type Err = GumboError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<_> = s.trim().split(':').collect();
         if parts.len() > 2 || parts.is_empty() {
@@ -24,14 +25,14 @@ impl FromStr for Action {
             .get(1)
             .map(|x| x.trim().to_lowercase())
             .unwrap_or("get".to_owned());
-        validate_methods(&method)?;
+        validate_methods(&method).map_err(|s| GumboError::InvalidControllerAction(s.to_owned()))?;
         let name = parts.first().unwrap().to_string();
 
         Ok(Action { name, method })
     }
 }
 
-fn validate_methods(method: &str) -> Result<(), ()> {
+fn validate_methods(method: &str) -> Result<(), &str> {
     match method {
         "get" => return Ok(()),
         "post" => return Ok(()),
@@ -41,7 +42,7 @@ fn validate_methods(method: &str) -> Result<(), ()> {
         _ => {}
     }
     eprintln!("unknown method for action: expected (get post put patch delete)' ");
-    Err(())
+    Err(method)
 }
 
 #[cfg(test)]

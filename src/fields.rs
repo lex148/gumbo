@@ -1,3 +1,4 @@
+use crate::errors::GumboError;
 use cruet::Inflector;
 use std::{fmt::Display, str::FromStr};
 
@@ -93,7 +94,7 @@ impl FromStr for Type {
 }
 
 impl FromStr for Field {
-    type Err = ();
+    type Err = GumboError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.trim();
         let parts: Vec<_> = s.split(':').collect();
@@ -111,7 +112,8 @@ impl FromStr for Field {
         if parts.len() == 2 {
             return Ok(Field {
                 name: parts[0].to_snake_case(),
-                ty: Type::from_str(parts[1])?,
+                ty: Type::from_str(parts[1])
+                    .map_err(|_| GumboError::InvalidFieldType(s.to_string()))?,
                 null: false,
             });
         }
@@ -122,12 +124,13 @@ impl FromStr for Field {
             let null = tail == "null" || tail == "optional" || tail == "option";
             return Ok(Field {
                 name: parts[0].to_snake_case(),
-                ty: Type::from_str(parts[1])?,
+                ty: Type::from_str(parts[1])
+                    .map_err(|_| GumboError::InvalidFieldType(s.to_string()))?,
                 null,
             });
         }
 
-        Err(())
+        Err(GumboError::InvalidFieldType(s.to_string()))
     }
 }
 

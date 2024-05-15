@@ -1,33 +1,19 @@
-use super::TemplateError;
-use super::{ensure_directory_exists, try_format};
+use crate::change::Change;
+use crate::errors::Result;
 use std::fs::File;
 use std::io::{Read, Seek, Write};
 use std::path::Path;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("src/main.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-
-    let buf: String = write()?.to_string();
-    file.write_all(buf.as_bytes())?;
-    let _ = try_format(&path);
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![Change::new("./src/main.rs", CODE)?])
 }
 
 /// Adds a route to the list of actix services
-pub(crate) fn append_service(
-    root_path: &Path,
-    service: impl Into<String>,
-) -> Result<(), TemplateError> {
+pub(crate) fn append_service(path: &Path, service: impl Into<String>) -> crate::errors::Result<()> {
     let service: String = service.into();
-    let mut path = root_path.to_path_buf();
-    path.push("src/main.rs");
+
+    //let mut path = root_path.to_path_buf();
+    //path.push("src/main.rs");
 
     let mut file = File::options().write(true).read(true).open(&path)?;
     file.rewind()?;
@@ -67,8 +53,7 @@ fn find_last_service_call(input: &str) -> Option<&str> {
     None
 }
 
-fn write() -> Result<&'static str, TemplateError> {
-    Ok(r#"
+const CODE: &str = r#"
 use actix_web::{App, HttpServer};
 use std::env;
 use std::net::SocketAddr;
@@ -129,5 +114,4 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-"#)
-}
+"#;

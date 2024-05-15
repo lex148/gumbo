@@ -1,22 +1,8 @@
-use crate::templates::ensure_directory_exists;
-use crate::templates::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/migrations/mod.rs");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-
-    file.write_all(CODE.as_bytes())?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![Change::new("./src/migrations/mod.rs", CODE)?])
 }
 
 static CODE: &str = r#"

@@ -1,22 +1,11 @@
-use super::{ensure_directory_exists, TemplateError};
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/input.css");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-
-    file.write_all(CODE.as_bytes())?;
-    tailwindcfg(root_path)?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![
+        Change::new("./src/input.css", CODE)?,
+        Change::new("./tailwind.config.js", TWCFG)?,
+    ])
 }
 
 static CODE: &str = r#"@tailwind base;
@@ -32,19 +21,6 @@ static CODE: &str = r#"@tailwind base;
   }
 }
 "#;
-
-pub(crate) fn tailwindcfg(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./tailwind.config.js");
-    ensure_directory_exists(&path)?;
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
-    file.write_all(TWCFG.as_bytes())?;
-    Ok(())
-}
 
 static TWCFG: &str = r#"/** @type {import('tailwindcss').Config} */
 module.exports = {

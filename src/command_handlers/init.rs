@@ -1,25 +1,11 @@
-use crate::templates::TemplateError;
+use crate::change::{write_to_disk, Change};
+use crate::errors::{GumboError, Result};
 use crate::templates::{
     asset_controller, auth_controller, build, docker, errors, greetings_controller, helpers_mod,
     inputcss, main, migrations, models_session, views_mod,
 };
-use std::fs::File;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-enum InitError {
-    #[error("Error Running Cargo: {0}")]
-    CargoInitFailed(String),
-    #[error("Error Adding Dependencies: {0}")]
-    DependenciesFailed(String),
-    #[error("{0}")]
-    Template(TemplateError),
-    #[error("{0}")]
-    IoError(std::io::Error),
-}
 
 /// Called to to crate a new gumbo project
 pub fn run(path: &Path) {
@@ -29,44 +15,46 @@ pub fn run(path: &Path) {
     }
 }
 
-fn run_inner(path: &Path) -> Result<(), InitError> {
-    cargo_init(path)?;
+fn run_inner(rootpath: &Path) -> Result<()> {
+    cargo_init(rootpath)?;
 
-    build::write_template(path).map_err(InitError::Template)?;
-    inputcss::write_template(path).map_err(InitError::Template)?;
-    asset_controller::write_template(path).map_err(InitError::Template)?;
-    auth_controller::write_template(path).map_err(InitError::Template)?;
-    greetings_controller::write_template(path).map_err(InitError::Template)?;
-    views_mod::write_template(path).map_err(InitError::Template)?;
-    helpers_mod::write_template(path).map_err(InitError::Template)?;
-    errors::write_template(path).map_err(InitError::Template)?;
-    crate::templates::touch(path, "./src/models/mod.rs").map_err(InitError::Template)?;
-    models_session::write_template(path).map_err(InitError::Template)?;
-    migrations::init::write_template(path).map_err(InitError::Template)?;
-    docker::write_template(path).map_err(InitError::Template)?;
-    main::write_template(path).map_err(InitError::Template)?;
-    super::run_rustfmt(path);
-    crate::command_handlers::generate::dotenv::write_template(path).map_err(InitError::Template)?;
-    append_gitignore(path)?;
+    let logo = include_bytes!("../templates/gumbo.webp");
 
-    Ok(())
-}
+    let changes = [
+        build::write_template()?,
+        inputcss::write_template()?,
+        asset_controller::write_template()?,
+        auth_controller::write_template()?,
+        greetings_controller::write_template()?,
+        views_mod::write_template()?,
+        helpers_mod::write_template()?,
+        errors::write_template()?,
+        vec![Change::new("./src/models/mod.rs", "")?.append()],
+        vec![Change::new("./src/assets/.gitkeep", "")?.append()],
+        vec![Change::new("./src/assets/gumbo.webp", logo.as_slice())?.append()],
+        models_session::write_template()?,
+        migrations::init::write_template()?,
+        docker::write_template()?,
+        main::write_template()?,
+        crate::command_handlers::generate::dotenv::write_template()?,
+        vec![Change::new("./.gitignore", "\n.env\n")?.append()],
+    ];
 
-fn append_gitignore(root_path: &Path) -> Result<(), InitError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./.gitignore");
-    let mut file = File::options()
-        .append(true)
-        .open(path)
-        .map_err(InitError::IoError)?;
-    let content = "\n.env\n";
-    file.write_all(content.as_bytes())
-        .map_err(InitError::IoError)?;
+    for change in changes.as_ref().iter().flatten() {
+        println!("CREATING: {:?}", change.file());
+    }
+
+    for change in changes.as_ref().iter().flatten() {
+        write_to_disk(rootpath, change)?;
+    }
+
+    super::run_rustfmt(rootpath);
+
     Ok(())
 }
 
 /// runs cargo into to crate the project
-fn cargo_init(path: &Path) -> Result<(), InitError> {
+fn cargo_init(path: &Path) -> Result<()> {
     // If the cargo project already exists skip this step
     let mut toml_path: PathBuf = path.to_path_buf();
     toml_path.push("Cargo.toml");
@@ -77,7 +65,7 @@ fn cargo_init(path: &Path) -> Result<(), InitError> {
     // run cargo init path
     let path_str = path
         .to_str()
-        .ok_or(InitError::CargoInitFailed("Bad Path".to_owned()))?;
+        .ok_or(GumboError::CargoInitFailed("Bad Path".to_owned()))?;
     let out = Command::new("cargo")
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -87,11 +75,11 @@ fn cargo_init(path: &Path) -> Result<(), InitError> {
     match out {
         Err(err) => {
             let err = format!("{err}");
-            return Err(InitError::CargoInitFailed(err));
+            return Err(GumboError::CargoInitFailed(err));
         }
         Ok(out) => {
             if !out.status.success() {
-                return Err(InitError::CargoInitFailed("Cargo Error".to_string()));
+                return Err(GumboError::CargoInitFailed("Cargo Error".to_string()));
             }
         }
     }
@@ -122,7 +110,7 @@ fn cargo_init(path: &Path) -> Result<(), InitError> {
 }
 
 /// runs cargo into to crate the project
-fn add_dependencies(path: &Path, args: &[&str]) -> Result<(), InitError> {
+fn add_dependencies(path: &Path, args: &[&str]) -> Result<()> {
     let out = Command::new("cargo")
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -132,11 +120,11 @@ fn add_dependencies(path: &Path, args: &[&str]) -> Result<(), InitError> {
     match out {
         Err(err) => {
             let err = format!("{err}");
-            return Err(InitError::DependenciesFailed(err));
+            return Err(GumboError::DependenciesFailed(err));
         }
         Ok(out) => {
             if !out.status.success() {
-                return Err(InitError::DependenciesFailed("Cargo Error".to_string()));
+                return Err(GumboError::DependenciesFailed("Cargo Error".to_string()));
             }
         }
     }

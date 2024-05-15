@@ -1,35 +1,17 @@
-use super::modrs::append_module;
-use super::{ensure_directory_exists, TemplateError};
+use crate::change::Change;
+use crate::errors::Result;
 use crate::fields::Field;
 use crate::names::Names;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 use std::str::FromStr;
 
-pub(crate) fn write_template(
-    root_path: &Path,
-    names: &Names,
-    fields: &[Field],
-) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push(&names.model_path);
-    ensure_directory_exists(&path)?;
-
-    let mut file = File::options()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(&path)?;
+pub(crate) fn write_template(names: &Names, fields: &[Field]) -> Result<Vec<Change>> {
+    let path = &names.model_path;
     let code = build(names, fields)?;
-    file.write_all(code.as_bytes())?;
-
-    append_module(root_path, "./src/models/mod.rs", &names.model_mod)?;
-    Ok(())
+    Ok(vec![Change::new_from_path(path, code)?.add_parent_mod()])
 }
 
-fn build(names: &Names, fields: &[Field]) -> Result<String, TemplateError> {
-    let id_field = [Field::from_str("id:int").unwrap()];
+fn build(names: &Names, fields: &[Field]) -> Result<String> {
+    let id_field = [Field::from_str("id:int")?];
     let innerds: Vec<String> = id_field
         .iter()
         .chain(fields.iter())

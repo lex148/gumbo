@@ -1,28 +1,12 @@
-use super::modrs::append_module;
-use super::TemplateError;
-use super::{ensure_directory_exists, touch};
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/controllers/assets_controller.rs");
-    ensure_directory_exists(&path)?;
-    append_module(root_path, "./src/controllers/mod.rs", "assets_controller")?;
-    let mut file = File::create(&path)?;
-    file.write_all(CODE.as_bytes())?;
-
-    let logo = include_bytes!("./gumbo.webp");
-    let mut assets_logo = root_path.to_path_buf();
-    assets_logo.push("./src/assets/gumbo.webp");
-    ensure_directory_exists(&assets_logo)?;
-    let mut file = File::create(&assets_logo)?;
-    file.write_all(logo)?;
-
-    touch(root_path, "./src/assets/.gitkeep")?;
-
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![Change::new(
+        "./src/controllers/assets_controller.rs",
+        CODE,
+    )?
+    .add_parent_mod()])
 }
 
 static CODE: &str = r#"use actix_web::{get, HttpResponse};

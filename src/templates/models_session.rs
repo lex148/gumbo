@@ -1,18 +1,10 @@
-use crate::templates::ensure_directory_exists;
-use crate::templates::modrs::append_module;
-use crate::templates::TemplateError;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use crate::change::Change;
+use crate::errors::Result;
 
-pub(crate) fn write_template(root_path: &Path) -> Result<(), TemplateError> {
-    let mut path = root_path.to_path_buf();
-    path.push("./src/models/session.rs");
-    ensure_directory_exists(&path)?;
-    append_module(root_path, "./src/models/mod.rs", "session")?;
-    let mut file = File::create(&path)?;
-    file.write_all(CODE.trim().as_bytes())?;
-    Ok(())
+pub(crate) fn write_template() -> Result<Vec<Change>> {
+    Ok(vec![
+        Change::new("./src/models/session.rs", CODE)?.add_parent_mod()
+    ])
 }
 
 static CODE: &str = r##"
