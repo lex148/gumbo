@@ -18,6 +18,12 @@ pub fn run(path: &Path) {
 fn run_inner(rootpath: &Path) -> Result<()> {
     cargo_init(rootpath)?;
 
+    let full = std::fs::canonicalize(rootpath)?;
+    let name: String = full
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or("Site".to_string());
+
     let logo = include_bytes!("../templates/gumbo.webp");
 
     let changes = [
@@ -26,7 +32,7 @@ fn run_inner(rootpath: &Path) -> Result<()> {
         asset_controller::write_template()?,
         auth_controller::write_template()?,
         greetings_controller::write_template()?,
-        views_mod::write_template()?,
+        views_mod::write_template(&name)?,
         helpers_mod::write_template()?,
         errors::write_template()?,
         vec![Change::new("./src/models/mod.rs", "")?.append()],
