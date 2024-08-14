@@ -79,10 +79,12 @@ async fn main() -> std::io::Result<()> {
         }
     }
 
-    // read the environment variables
+    // read the environment variables to find what Interface to bind to
     let port = env::var("PORT").unwrap_or_else(|_| "3000".to_owned());
-    let host = env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_owned());
-    let bind_interface: SocketAddr = format!("{}:{}", host, port).parse().unwrap();
+    let port = port.parse::<u16>().unwrap();
+    let host = env::var("HOST").unwrap_or_else(|_| "::1".to_owned());
+    let ip: std::net::IpAddr = host.parse().unwrap();
+    let bind_interface: SocketAddr = SocketAddr::new(ip, port);
 
     // verify auth keys are setup
     crate::models::session::verify_auth_key();
