@@ -35,11 +35,22 @@ pub(crate) enum RootCommand {
 #[derive(Subcommand, Debug)]
 pub(crate) enum GenerateCommands {
     #[clap(name = "scaffold", alias = "s")]
+
     /// Scaffold out a full model/view/controller
     Scaffold {
         /// Name of the resource to scaffold. Example: `gumbo generate scaffold car make:string model:string year:int` would
         /// create a model/view/controller/migration for cars. Everything all wired up for the
         /// three fields
+        name: String,
+        /// List of fields for model. Example: name:string description:text:option
+        ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
+        fields: Vec<String>,
+    },
+
+    /// Generate a model
+    Model {
+        /// Name of the Model to generate. Example: `gumbo generate model car make:string model:string year:int` would
+        /// create a model/migration for cars. Everything all wired up for the three fields
         name: String,
         /// List of fields for model. Example: name:string description:text:option
         ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
