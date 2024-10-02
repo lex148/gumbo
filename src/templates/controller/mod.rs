@@ -88,7 +88,7 @@ pub(crate) fn write_crud_templates(
 
 static HEAD: &str = "use crate::errors::{Result, ServerError};
 use crate::DbClient;
-use crate::helpers::{render, redirect};
+use gumbo_lib::view::{render, redirect};
 use welds::prelude::*;
 use actix_web::{get, post, web::Path, web::Form, HttpResponse};
 ";

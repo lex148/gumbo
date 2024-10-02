@@ -12,9 +12,6 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
 pub(crate) fn append_service(path: &Path, service: impl Into<String>) -> crate::errors::Result<()> {
     let service: String = service.into();
 
-    //let mut path = root_path.to_path_buf();
-    //path.push("src/main.rs");
-
     let mut file = File::options().write(true).read(true).open(&path)?;
     file.rewind()?;
     let mut content = String::default();
@@ -54,14 +51,13 @@ fn find_last_service_call(input: &str) -> Option<&str> {
 }
 
 const CODE: &str = r#"
-use actix_web::{App, HttpServer};
+use actix_web::{web::Data, App, HttpServer};
 use std::env;
 use std::net::SocketAddr;
 use crate::controllers::*;
 
 mod controllers;
 mod errors;
-mod helpers;
 mod migrations;
 mod models;
 mod views;
@@ -87,7 +83,7 @@ async fn main() -> std::io::Result<()> {
     let bind_interface: SocketAddr = SocketAddr::new(ip, port);
 
     // verify auth keys are setup
-    crate::models::session::verify_auth_key();
+    gumbo_lib::session::verify_auth_key();
 
     // Connect to the database and run the migrations
     let connection_string =
@@ -96,7 +92,8 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Unable to connect to Database");
     migrations::up(&client).await.unwrap();
-    let client = actix_web::web::Data::new(client);
+
+    let client = Data::new(client);
 
     // boot up the server
     log::info!("Server Running: http://{}", bind_interface);
@@ -104,6 +101,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(client.clone())
             .service(assets_controller::styles)
+            .service(assets_controller::javascript)
             // serve the contents of the assets directory to the public
             .service(actix_files::Files::new("/assets", "./src/assets"))
             .service(greetings_controller::index)

@@ -1,8 +1,8 @@
 use crate::change::{write_to_disk, Change};
 use crate::errors::{GumboError, Result};
 use crate::templates::{
-    asset_controller, auth_controller, build, docker, errors, greetings_controller, helpers_mod,
-    inputcss, main, migrations, models_session, views_mod,
+    asset_controller, auth_controller, build, docker, errors, greetings_controller, inputcss, main,
+    migrations, views_mod,
 };
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -33,17 +33,16 @@ fn run_inner(rootpath: &Path) -> Result<()> {
         auth_controller::write_template()?,
         greetings_controller::write_template()?,
         views_mod::write_template(&name)?,
-        helpers_mod::write_template()?,
         errors::write_template()?,
         vec![Change::new("./src/models/mod.rs", "")?.append()],
         vec![Change::new("./src/assets/.gitkeep", "")?.append()],
+        vec![Change::new("./src/assets/js/.gitkeep", "")?.append()],
         vec![Change::new("./src/assets/gumbo.webp", logo.as_slice())?.append()],
-        models_session::write_template()?,
         migrations::init::write_template()?,
         docker::write_template()?,
         main::write_template()?,
         crate::command_handlers::generate::dotenv::write_template()?,
-        vec![Change::new("./.gitignore", "\n.env\n")?.append()],
+        vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
     ];
 
     for change in changes.as_ref().iter().flatten() {
@@ -102,6 +101,7 @@ fn cargo_init(path: &Path) -> Result<()> {
     add_dependencies(path, &["add", "serde"])?;
     add_dependencies(path, &["add", "pretty_env_logger"])?;
     add_dependencies(path, &["add", "yew", "--features=ssr"])?;
+    add_dependencies(path, &["add", "tokio", "--features=sync"])?;
     add_dependencies(path, &["add", "aes-gcm"])?;
     add_dependencies(path, &["add", "base64"])?;
     add_dependencies(path, &["add", "bincode"])?;
@@ -109,6 +109,10 @@ fn cargo_init(path: &Path) -> Result<()> {
     add_dependencies(path, &["add", "futures"])?;
     add_dependencies(path, &["add", "oauth2"])?;
     add_dependencies(path, &["add", "rand"])?;
+    add_dependencies(
+        path,
+        &["add", "gumbo-lib", "--features=sessions,turbo-streams"],
+    )?;
     // version 0.11 to match auth2
     add_dependencies(path, &["add", "reqwest@0.11", "--features=json"])?;
 

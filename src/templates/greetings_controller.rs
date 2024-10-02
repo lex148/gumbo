@@ -6,12 +6,28 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
         Change::new("./src/controllers/greetings_controller.rs", CODE)?.add_parent_mod(),
         Change::new("./src/views/greetings/mod.rs", "")?.add_parent_mod(),
         Change::new("./src/views/greetings/index.rs", VIEW)?.add_parent_mod(),
+        Change::new("./src/assets/js/greetings.js", JS)?,
     ])
 }
 
+static JS: &str = r#"
+import { Controller } from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.js"
+
+class GreetingController extends Controller {
+
+	greet() {
+		alert("Hello !!!")
+	}
+
+}
+
+Stimulus.register("greeting", GreetingController)
+"#;
+
 static CODE: &str = r#"
-use crate::helpers::render;
-use crate::{errors::Result, models::session::Session};
+use gumbo_lib::view::render;
+use gumbo_lib::session::Session;
+use crate::errors::Result;
 use actix_web::{get, web::Path, HttpResponse};
 use welds::prelude::*;
 
@@ -19,19 +35,20 @@ use welds::prelude::*;
 async fn index(session: Option<Session>) -> Result<HttpResponse> {
     use crate::views::greetings::index::{View, ViewArgs};
     let args = ViewArgs::new(session);
-    render::<View, _>(args).await
+    render::<View,_, _>(args).await
 }
 
 #[get("/restricted")]
 async fn index_restricted(session: Session) -> Result<HttpResponse> {
     use crate::views::greetings::index::{View, ViewArgs};
     let args = ViewArgs::new(Some(session));
-    render::<View, _>(args).await
+    render::<View,_, _>(args).await
 }
 "#;
 
 static VIEW: &str = r#"
-use crate::models::session::Session;
+use gumbo_lib::session::Session;
+use gumbo_lib::javascript::js_path;
 use crate::views::layouts::MainLayout;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -54,9 +71,10 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
     html! {
       <MainLayout>
 
-        <div class="w-fill m-auto">
+        <div class="w-fill m-auto" data-controller="greeting">
 
-          <img src="/assets/gumbo.webp" class="h-80 block m-auto"/>
+          <img data-action="click->greeting#greet" src="/assets/gumbo.webp" class="h-80 block m-auto"/>
+
           <h1 class="text-4xl">{ "Welcome to Gumbo" }</h1>
 
           <div class="max-w-lg">
@@ -111,6 +129,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
 
 
         </div>
+        <script type="module" src={ js_path("greetings").unwrap() } />
 
       </MainLayout>
     }

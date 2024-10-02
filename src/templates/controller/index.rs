@@ -20,7 +20,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     func.line("let db = &*db.into_inner();");
     func.line(format!("let list = {st}::all().run(db).await?;"));
     func.line("let args = ViewArgs::new(list);");
-    func.line("render::<View,_>(args).await");
+    func.line("render::<View,_,_>(args).await");
 
     s.to_string()
 }

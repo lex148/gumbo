@@ -21,7 +21,7 @@ pub fn template_with_view(names: &Names, action: &Action) -> String {
 pub(crate) async fn {name}() -> Result<HttpResponse> {{
     use crate::views::{viewmod}::{name}::{{View, ViewArgs}};
     let args = ViewArgs::new();
-    render::<View, _>(args).await
+    render::<View,_ , _>(args).await
 }}
 "#
     )

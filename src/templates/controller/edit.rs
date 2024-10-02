@@ -17,7 +17,7 @@ pub(crate) async fn edit(db: DbClient, path: Path<i32>) -> Result<HttpResponse> 
 
     use crate::views::{viewmod}::edit::{{Edit, ViewArgs}};
     let args = ViewArgs::new({model});
-    render::<Edit, _>(args).await
+    render::<Edit,_ , _>(args).await
 }}
 "#
     )

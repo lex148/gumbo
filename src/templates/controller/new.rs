@@ -17,7 +17,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
         "use crate::views::{viewmod}::new::{{New, ViewArgs}};"
     ));
     func.line("let args = ViewArgs::default();");
-    func.line("render::<New,_>(args).await");
+    func.line("render::<New,_,_>(args).await");
 
     s.to_string()
 }
@@ -39,7 +39,7 @@ mod tests {
 pub(crate) async fn new() -> Result<HttpResponse> {
     use crate::views::potatoes::new::{New, ViewArgs};
     let args = ViewArgs::default();
-    render::<New,_>(args).await
+    render::<New,_,_>(args).await
 }
 "#;
 }

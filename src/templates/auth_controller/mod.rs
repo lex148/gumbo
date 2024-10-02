@@ -14,7 +14,7 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
 
 static CODE: &str = r##"
 use crate::errors::{oauth_error, Result};
-use crate::models::session::Session;
+use gumbo_lib::session::Session;
 use actix_web::cookie::time::OffsetDateTime;
 use actix_web::cookie::{Cookie, SameSite};
 use actix_web::{delete, get, web::Path, web::Query, HttpRequest, HttpResponse};

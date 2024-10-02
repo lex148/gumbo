@@ -18,9 +18,15 @@ pub(crate) use main::Layout as MainLayout;
 
 fn code(sitename: &str) -> String {
     format!(
-        r#"
+        r##"
 use yew::prelude::*;
 use yew::{{html, Html, Properties}};
+
+// JS to bootup stimulus
+const STIMULUS_INIT: &str = r#"
+import {{ Application, Controller }} from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.js"
+window.Stimulus = Application.start()
+"#;
 
 #[derive(Properties, PartialEq)]
 pub struct LayoutProps {{
@@ -42,6 +48,7 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {{
           <link rel="stylesheet" href="/app.css" />
           <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
           <script defer=true src={{turbo}} />
+          <script type="module">{{STIMULUS_INIT}}</script>
         </head>
         <body class="bg-[#fff9de]">
           <main class="container mx-auto mt-12 mb-12 flex">
@@ -51,6 +58,6 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {{
       </html>
     }}
 }}
-"#
+"##
     )
 }
