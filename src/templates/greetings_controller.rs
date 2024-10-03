@@ -11,7 +11,7 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
 }
 
 static JS: &str = r#"
-import { Controller } from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.js"
+import { Controller } from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.js";
 
 class GreetingController extends Controller {
 

@@ -40,10 +40,16 @@ COPY --from=planner /app/recipe.json recipe.json
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path recipe.json
 
-# Build application
 COPY . .
+
+# Update the permissions so that the app user can access the assets
+RUN chmod -R a+r /app/src/assets
+RUN find /app/src/assets -type d -exec chmod a+rx {} \;
+
+# Build application
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin server
-RUN strip /app/target/x86_64-unknown-linux-musl/release/server 
+RUN strip /app/target/x86_64-unknown-linux-musl/release/server
+
 
 # Build runtime image
 FROM scratch AS runtime
@@ -53,5 +59,4 @@ USER 1001
 ENV RUST_LOG="info,sqlx=warn"
 ENV HOST="0.0.0.0"
 ENTRYPOINT ["/app/server"]
-#CMD []
 "#;
