@@ -18,9 +18,9 @@ pub fn template_with_view(names: &Names, action: &Action) -> String {
     format!(
         r#"
 #[{method}("/{indexaction}/{rawname}")]
-pub(crate) async fn {name}() -> Result<HttpResponse> {{
+pub(crate) async fn {name}(_db: DbClient, session: Option<Session>) -> Result<HttpResponse> {{
     use crate::views::{viewmod}::{name}::{{View, ViewArgs}};
-    let args = ViewArgs::new();
+    let args = ViewArgs::new(session);
     render::<View,_ , _>(args).await
 }}
 "#
@@ -36,7 +36,7 @@ pub fn template_without_view(names: &Names, action: &Action) -> String {
     format!(
         r#"
 #[{method}("/{indexaction}/{rawname}")]
-pub(crate) async fn {name}() -> Result<HttpResponse> {{
+pub(crate) async fn {name}(_db: DbClient, _session: Option<Session>) -> Result<HttpResponse> {{
     todo!();
 }}
 "#

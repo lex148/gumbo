@@ -15,15 +15,21 @@ pub(crate) fn write_template(names: &Names, action: &Action) -> Result<Change> {
 fn build_template(viewmod: &str, action: &str) -> String {
     format!(
         r#"
+use crate::views::layouts::MainLayout;
 use std::sync::Arc;
+use gumbo_lib::Session;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
-pub(crate) struct ViewArgs {{ }}
+pub(crate) struct ViewArgs {{
+    session: Option<Arc<Session>>
+}}
 
 impl ViewArgs {{
-    pub(crate) fn new() -> Self {{
-        Self {{  }}
+    pub(crate) fn new(session: Option<Session>) -> Self {{
+        Self {{
+          session: session.map( Arc::new ),
+        }}
     }}
 }}
 
@@ -31,7 +37,9 @@ impl ViewArgs {{
 pub(crate) fn View(args: &ViewArgs) -> Html {{
     html! {{
         <>
+          <MainLayout session={{ args.session.clone() }}>
             <span>{{"view: views/{viewmod}/{action}"}}</span>
+          </MainLayout>
         </>
     }}
 }}
