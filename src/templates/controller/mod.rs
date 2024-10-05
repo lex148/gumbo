@@ -7,6 +7,7 @@ use cruet::Inflector;
 use std::collections::HashSet;
 
 mod create;
+mod delete;
 mod edit;
 mod empty;
 mod index;
@@ -70,6 +71,8 @@ pub(crate) fn write_crud_templates(
         edit::crud_template(names),
         "".to_owned(),
         update::crud_template(names),
+        "".to_owned(),
+        delete::crud_template(names),
     ];
     let code = parts.join("\n");
     let ctr_name = &names.controller_mod;
@@ -81,6 +84,7 @@ pub(crate) fn write_crud_templates(
         Change::append_service(format!("{ctr_name}::create"))?,
         Change::append_service(format!("{ctr_name}::edit"))?,
         Change::append_service(format!("{ctr_name}::update"))?,
+        Change::append_service(format!("{ctr_name}::delete"))?,
         create::write_params(names, fields)?,
         update::write_params(names, fields)?,
     ])
@@ -89,6 +93,7 @@ pub(crate) fn write_crud_templates(
 static HEAD: &str = "use crate::errors::{Result, ServerError};
 use crate::DbClient;
 use gumbo_lib::view::{render, redirect};
+use gumbo_lib::Session;
 use welds::prelude::*;
-use actix_web::{get, post, web::Path, web::Form, HttpResponse};
+use actix_web::{get, post, delete, web::Path, web::Form, HttpResponse};
 ";

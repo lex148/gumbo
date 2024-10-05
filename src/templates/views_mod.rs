@@ -21,6 +21,8 @@ fn code(sitename: &str) -> String {
         r##"
 use yew::prelude::*;
 use yew::{{html, Html, Properties}};
+use gumbo_lib::Session;
+use std::sync::Arc;
 
 // JS to bootup stimulus
 const STIMULUS_INIT: &str = r#"
@@ -31,12 +33,19 @@ window.Stimulus = Application.start()
 #[derive(Properties, PartialEq)]
 pub struct LayoutProps {{
     #[prop_or_default]
+    pub session: Option<Arc<Session>>,
+    #[prop_or_default]
     pub children: Html,
 }}
 
 #[function_component]
 pub(crate) fn Layout(props: &LayoutProps) -> Html {{
     let turbo = "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.4/dist/turbo.es2017-umd.js";
+    let session = &props.session;
+    let session_meta = session
+        .as_ref()
+        .map(|s| s.meta_csrf_token())
+        .unwrap_or_default();
 
     html! {{
       <html lang="en">
@@ -44,6 +53,7 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {{
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+          {{session_meta}}
           <title>{{"{sitename}"}}</title>
           <link rel="stylesheet" href="/app.css" />
           <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />

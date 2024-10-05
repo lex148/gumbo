@@ -16,6 +16,7 @@ fn view_args(names: &Names) -> Struct {
     let mut st = Struct::new("ViewArgs");
     st.vis("pub(crate)");
     st.attr("derive(Properties, PartialEq)");
+    st.new_field("session", "Option<Arc<Session>>");
     st.new_field("list", format!("Vec<Arc<{}>>", &names.model_struct))
         .vis("pub(crate)");
     st
@@ -24,10 +25,11 @@ fn impl_view_args(names: &Names) -> Impl {
     let mut imp = Impl::new("ViewArgs");
     let new = imp.new_fn("new");
     new.vis("pub(crate)");
+    new.arg("session", "Option<Session>");
     let ty = format!("Vec<welds::state::DbState<{}>>", &names.model_struct);
     new.arg("mut list", ty);
     new.ret("Self");
-    new.line("Self { list: list.drain(..).map(|x| x.into_vm()).collect() }");
+    new.line("Self { session: session.map(Arc::new), list: list.drain(..).map(|x| x.into_vm()).collect() }");
     imp
 }
 
@@ -41,7 +43,7 @@ fn view(names: &Names) -> String {
 #[function_component]
 pub(crate) fn View(args: &ViewArgs) -> Html {{
     html! {{
-        <MainLayout>
+        <MainLayout session={{ args.session.clone() }}>
           <h1>{{"List of {title}"}}</h1>
           {{ args.list.iter().map(|x| html!{{ <Row {single}={{x}} />}}  ).collect::<Html>() }}
           <br/>

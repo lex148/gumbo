@@ -19,6 +19,7 @@ fn build_crud_template(names: &Names) -> String {
         r#"
 use crate::models::{modelmod}::{modelstruct};
 use crate::views::layouts::MainLayout;
+use gumbo_lib::Session;
 use super::form::Form;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -26,14 +27,24 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq, Default)]
 pub(crate) struct ViewArgs {{
     #[prop_or_default]
+    pub(crate) session: Option<Arc<Session>>,
+    #[prop_or_default]
     pub(crate) {modelmod}: Option<Arc<{modelstruct}>>,
+}}
+impl ViewArgs {{
+    pub(crate) fn new(session: Option<Session>, {modelmod}: Option<Arc<{modelstruct}>>) -> Self {{
+        Self {{ 
+          session: session.map( Arc::new ),
+          {modelmod} 
+        }}
+    }}
 }}
 
 #[function_component]
 pub(crate) fn New(args: &ViewArgs) -> Html {{
     html! {{
         <>
-          <MainLayout>
+          <MainLayout session={{ args.session.clone() }}>
             <Form action={{ "/{action}" }} method={{"POST"}} {modelmod}={{ args.{modelmod}.clone() }} />
           </MainLayout>
         </>

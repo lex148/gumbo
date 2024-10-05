@@ -8,7 +8,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     format!(
         r#"
 #[get("/{indexaction}/{{id}}/edit")]
-pub(crate) async fn edit(db: DbClient, path: Path<i32>) -> Result<HttpResponse> {{
+pub(crate) async fn edit(db: DbClient, path: Path<i32>, session: Option<Session>) -> Result<HttpResponse> {{
     let id = path.into_inner();
     let {model} = {model_struct}::find_by_id(db.as_ref(), id)
         .await?
@@ -16,7 +16,7 @@ pub(crate) async fn edit(db: DbClient, path: Path<i32>) -> Result<HttpResponse> 
         .into_vm();
 
     use crate::views::{viewmod}::edit::{{Edit, ViewArgs}};
-    let args = ViewArgs::new({model});
+    let args = ViewArgs::new(session, {model});
     render::<Edit,_ , _>(args).await
 }}
 "#

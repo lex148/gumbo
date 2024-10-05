@@ -11,6 +11,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     func.set_async(true)
         .vis("pub(crate)")
         .ret("Result<HttpResponse>")
+        .arg("session", "Option<Session>")
         .arg("db", "DbClient")
         .attr(&attr);
 
@@ -19,7 +20,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     ));
     func.line("let db = &*db.into_inner();");
     func.line(format!("let list = {st}::all().run(db).await?;"));
-    func.line("let args = ViewArgs::new(list);");
+    func.line("let args = ViewArgs::new(session, list);");
     func.line("render::<View,_,_>(args).await");
 
     s.to_string()

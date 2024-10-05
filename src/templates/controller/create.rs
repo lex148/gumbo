@@ -9,7 +9,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     format!(
         r#"
 #[post("/{indexaction}")]
-pub(crate) async fn create(db: DbClient, params: Form<CreateParams>) -> Result<HttpResponse> {{
+pub(crate) async fn create(db: DbClient, params: Form<CreateParams>, _session: Option<Session>) -> Result<HttpResponse> {{
     let mut {model} = {model_struct}::new();
     params.update(&mut {model})?;
     {model}.save(db.as_ref()).await?;

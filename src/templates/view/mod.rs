@@ -47,6 +47,7 @@ pub(crate) fn usings(names: &Names) -> String {
         r#"use crate::models::{model_mod}::{model_struct};
 use crate::views::layouts::MainLayout;
 use std::sync::Arc;
+use gumbo_lib::Session;
 use yew::prelude::*;
 "#
     )
