@@ -59,9 +59,9 @@ fn build_field_code(names: &Names, field: &Field) -> String {
 
     format!(
         r#"
-            <div>
+            <div class="mb-2">
                 <label for={{"{modelmod}_{fieldname}"}} >{{"{fieldname}"}}</label>
-                <input type={{"text"}} id={{"{modelmod}_{fieldname}"}} name={{"{modelmod}[{fieldname}]"}} value={{ {fieldread} }} />
+                <input class="ml-3" type={{"text"}} id={{"{modelmod}_{fieldname}"}} name={{"{modelmod}[{fieldname}]"}} value={{ {fieldread} }} />
             </div>
     "#
     )

@@ -122,7 +122,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
             </ol>
 
             <div class="inline-block p-1 m-1 pt-2 bg-gray-200 text-gray-500 border border-gray-300 rounded-md ">
-              {"cargo watch -d 0.0 -x run"}
+              {"cargo watch -d 0.0 -w ./src -x run"}
             </div>
 
           </div>

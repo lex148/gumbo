@@ -65,7 +65,7 @@ fn build_field_code(names: &Names, field: &Field) -> String {
         r#"
             <div>
                 <label>{{"{fieldname}"}}</label>
-                <span>{{ {fieldread} }}</span>
+                <span class="ml-3 font-bold">{{ {fieldread} }}</span>
             </div>
     "#
     )
