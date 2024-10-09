@@ -47,12 +47,24 @@ pub(crate) enum GenerateCommands {
         fields: Vec<String>,
     },
 
+    #[clap(name = "model", alias = "m")]
     /// Generate a model
     Model {
         /// Name of the Model to generate. Example: `gumbo generate model car make:string model:string year:int` would
         /// create a model/migration for cars. Everything all wired up for the three fields
         name: String,
         /// List of fields for model. Example: name:string description:text:option
+        ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
+        fields: Vec<String>,
+    },
+
+    #[clap(name = "migration", alias = "db")]
+    /// Generate a migration, no model attached
+    Migration {
+        /// Name of the Migration to generate. Example: `gumbo generate migration car make:string model:string year:int` would
+        /// create a migration for cars.
+        name: String,
+        /// List of fields for table. Example: name:string description:text:option
         ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
         fields: Vec<String>,
     },

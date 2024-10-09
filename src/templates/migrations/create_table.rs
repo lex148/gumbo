@@ -12,10 +12,15 @@ pub(crate) fn write_template(
 ) -> Result<Vec<Change>> {
     let stamp = super::timestamp();
     let tablename = &names.table_name;
-    let migration_name = format!("m{stamp}_create_table_{tablename}");
+
+    let migration_name = if fields.is_empty() {
+        format!("m{stamp}_{tablename}")
+    } else {
+        format!("m{stamp}_create_table_{tablename}")
+    };
 
     let path = format!("./src/migrations/{migration_name}.rs");
-    let code = build(names, fields)?;
+    let code = build(names, fields, &migration_name)?;
 
     Ok(vec![
         Change::new_from_path(path, code)?,
@@ -23,45 +28,44 @@ pub(crate) fn write_template(
     ])
 }
 
-fn build(names: &Names, fields: &[Field]) -> Result<String> {
+fn build(names: &Names, fields: &[Field], migration_name: &str) -> Result<String> {
     let tablename = &names.table_name;
     let mut parts = vec![HEAD.trim().to_owned(), fn_name(names)];
     parts.push(format!("\n    let m = create_table(\"{tablename}\")"));
-    parts.push("\n        .id(|c| c(\"id\", Type::Int))".to_owned());
+    parts.push("\n        .id(|c| c(\"id\", Type::IntBig))".to_owned());
 
     for f in fields {
         parts.push(add_field(f));
     }
 
     parts.push(";\n".to_owned());
-    parts.push(fn_tail(names));
+    parts.push(fn_tail(migration_name));
 
     Ok(parts.join(""))
 }
 
 static HEAD: &str = r#"
 use welds::errors::Result;
-use welds::migrations::{create_table, types::Type, MigrationFn, MigrationStep, TableState};
+use welds::migrations::{create_table, types::Type, MigrationStep, TableState};
 
 "#;
 
 fn fn_name(_name: &Names) -> String {
-    format!("\n\npub(super) fn step(_state: &TableState) -> Result<MigrationStep> {{")
+    "\n\npub(super) fn step(_state: &TableState) -> Result<MigrationStep> {".to_string()
 }
 
 fn add_field(field: &Field) -> String {
     let name = &field.name;
     let ty = &field.ty;
     if field.null {
-        format!("\n        .column(|c| c(\"{name}\", Type::{ty}).null())")
+        format!("\n        .column(|c| c(\"{name}\", Type::{ty}).is_null())")
     } else {
         format!("\n        .column(|c| c(\"{name}\", Type::{ty}))")
     }
 }
 
-fn fn_tail(name: &Names) -> String {
-    let name = &name.table_name;
-    format!("    Ok(MigrationStep::new(\"create_table_{name}\", m))\n}}")
+fn fn_tail(migration_name: &str) -> String {
+    format!("    Ok(MigrationStep::new(\"{migration_name}\", m))\n}}")
 }
 
 #[cfg(test)]
@@ -80,7 +84,7 @@ mod tests {
             Field::from_str("year:int").unwrap(),
         ];
 
-        let code = build(&n, &fields).unwrap();
+        let code = build(&n, &fields, "create_table_car_prices").unwrap();
         assert_eq!(code, EXPECTED.trim())
     }
 

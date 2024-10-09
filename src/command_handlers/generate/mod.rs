@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 mod controller;
 pub(crate) mod dotenv;
+mod migration;
 mod model;
 mod scaffold;
 use crate::errors::Result;
@@ -20,6 +21,7 @@ fn run_inner(cmd: &GenerateCommands) -> Result<()> {
     match cmd {
         GenerateCommands::Controller { name, actions } => controller::generate(name, actions)?,
         GenerateCommands::Scaffold { name, fields } => scaffold::generate(name, fields)?,
+        GenerateCommands::Migration { name, fields } => migration::generate(name, fields)?,
         GenerateCommands::Model { name, fields } => model::generate(name, fields)?,
         GenerateCommands::Env {} => dotenv::generate()?,
     }

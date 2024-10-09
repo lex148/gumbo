@@ -11,7 +11,7 @@ pub(crate) fn write_template(names: &Names, fields: &[Field]) -> Result<Vec<Chan
 }
 
 fn build(names: &Names, fields: &[Field]) -> Result<String> {
-    let id_field = [Field::from_str("id:int")?];
+    let id_field = [Field::from_str("id:bigint")?];
     let innerds: Vec<String> = id_field
         .iter()
         .chain(fields.iter())
@@ -68,7 +68,7 @@ use welds::prelude::*;
 #[derive(Debug, WeldsModel, PartialEq)]
 #[welds(table = "inventory_levels")]
 pub(crate) struct InventoryLevel {
-  pub id: i32,
+  pub id: i64,
   pub item: Option<String>,
   pub price: f32,
 }"#

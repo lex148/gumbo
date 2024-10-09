@@ -76,6 +76,8 @@ impl FromStr for Type {
             "small_integer" => Type::IntSmall,
             "integer" => Type::Int,
             "int" => Type::Int,
+            "intbig" => Type::IntBig,
+            "bigint" => Type::IntBig,
             "int_big" => Type::IntBig,
             "big_int" => Type::IntBig,
             "integer_big" => Type::IntBig,
