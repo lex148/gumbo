@@ -34,6 +34,7 @@ fn run_inner(rootpath: &Path) -> Result<()> {
         greetings_controller::write_template()?,
         views_mod::write_template(&name)?,
         errors::write_template()?,
+        vec![Change::new("./dev.sqlite", "")?.append()],
         vec![Change::new("./src/models/mod.rs", "")?.append()],
         vec![Change::new("./src/assets/.gitkeep", "")?.append()],
         vec![Change::new("./src/assets/js/.gitkeep", "")?.append()],

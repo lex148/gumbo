@@ -7,6 +7,8 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
         Change::new("./src/views/greetings/mod.rs", "")?.add_parent_mod(),
         Change::new("./src/views/greetings/index.rs", VIEW)?.add_parent_mod(),
         Change::new("./src/assets/js/greetings.js", JS)?,
+        Change::new("./src/controllers/health_controller.rs", CODE_HEALTH)?.add_parent_mod(),
+        Change::new("./src/assets/js/hot_reload.js", JS_HOT_RELOAD)?,
     ])
 }
 
@@ -16,12 +18,47 @@ import { Controller } from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.j
 class GreetingController extends Controller {
 
 	greet() {
-		alert("Hello !!!")
+		alert("Hello !!!");
 	}
 
 }
 
-Stimulus.register("greeting", GreetingController)
+Stimulus.register("greeting", GreetingController);
+"#;
+
+static JS_HOT_RELOAD: &str = r#"
+(async function(){
+
+	fetch("/healthz", { headers: { 'content-type': 'text/event-stream' }})
+		.then( watchForDisconnect )
+		.catch( pollForReboot );
+
+	function reload() {
+		Turbo.cache.clear();
+		window.location = window.location + "";
+	}
+
+	let pollCount = 0;
+	function pollForReboot() {
+		fetch("/healthz").then(reload).catch(() => {
+			// If the server is taking a very long time, let the dev know
+			pollCount = pollCount + 1;
+			// if you can't use mold, you might want to bump this to wait a little longer
+			if( pollCount > 40 ) {
+				if( confirm('Server Is unavalable, Keep Trying?') ) {
+					pollCount = 0;
+				} else {
+					return;
+				}
+			}
+			setTimeout(pollForReboot, 100);
+		})
+	}
+
+	function watchForDisconnect(request) {
+		request.blob().then(pollForReboot).catch(pollForReboot);
+	}
+})()
 "#;
 
 static CODE: &str = r#"
@@ -43,6 +80,35 @@ async fn index_restricted(session: Session) -> Result<HttpResponse> {
     use crate::views::greetings::index::{View, ViewArgs};
     let args = ViewArgs::new(Some(session));
     render::<View,_, _>(args).await
+}
+"#;
+
+static CODE_HEALTH: &str = r#"
+use actix_web::http::header::CONTENT_TYPE;
+use actix_web::web::Bytes;
+use actix_web::{get, HttpRequest, HttpResponse};
+use futures::stream::unfold;
+use tokio::time::sleep;
+
+#[get("/healthz")]
+async fn index(req: HttpRequest) -> HttpResponse {
+    let mine = req
+        .headers()
+        .get(CONTENT_TYPE)
+        .and_then(|x| x.to_str().ok());
+
+    if mine.map(|x| x == "text/event-stream").unwrap_or_default() {
+        let no_stream = unfold((), forever_await);
+        return HttpResponse::Ok().streaming(no_stream);
+    }
+
+    HttpResponse::NoContent().finish()
+}
+
+pub async fn forever_await(_: ()) -> Option<(std::result::Result<Bytes, actix_web::Error>, ())> {
+    sleep(std::time::Duration::from_secs(1)).await;
+    let bytes = Bytes::copy_from_slice(&[]);
+    Some((Ok::<_, actix_web::Error>(bytes), ()))
 }
 "#;
 

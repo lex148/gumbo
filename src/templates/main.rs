@@ -67,6 +67,10 @@ pub(crate) type DbClient = actix_web::web::Data<SqliteClient>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // default log level to info
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "info");
+    }
     pretty_env_logger::init();
     if let Err(err) = dotenvy::dotenv() {
         match err {
@@ -87,7 +91,7 @@ async fn main() -> std::io::Result<()> {
 
     // Connect to the database and run the migrations
     let connection_string =
-        env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite::memory:".to_owned());
+        env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://./dev.sqlite".to_owned());
     let client = welds::connections::sqlite::connect(&connection_string)
         .await
         .expect("Unable to connect to Database");
@@ -100,6 +104,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(client.clone())
+            .service(health_controller::index)
             .service(assets_controller::styles)
             .service(assets_controller::javascript)
             // serve the contents of the assets directory to the public

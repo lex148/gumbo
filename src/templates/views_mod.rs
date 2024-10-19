@@ -19,10 +19,11 @@ pub(crate) use main::Layout as MainLayout;
 fn code(sitename: &str) -> String {
     format!(
         r##"
-use yew::prelude::*;
-use yew::{{html, Html, Properties}};
+use gumbo_lib::javascript::js_path;
 use gumbo_lib::Session;
 use std::sync::Arc;
+use yew::prelude::*;
+use yew::{{html, Html, Properties}};
 
 // JS to bootup stimulus
 const STIMULUS_INIT: &str = r#"
@@ -47,6 +48,13 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {{
         .map(|s| s.meta_csrf_token())
         .unwrap_or_default();
 
+    // enable live reloading for development mode
+    let live_reload = if cfg!(debug_assertions) {{
+        html! {{ <script defer=true src={{ js_path("hot_reload").unwrap() }} /> }}
+    }} else {{
+        html! {{}}
+    }};
+
     html! {{
       <html lang="en">
         <head>
@@ -59,6 +67,7 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {{
           <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
           <script defer=true src={{turbo}} />
           <script type="module">{{STIMULUS_INIT}}</script>
+          {{ live_reload }}
         </head>
         <body class="bg-[#fff9de]">
           <main class="container mx-auto mt-12 mb-12 flex">
