@@ -24,6 +24,10 @@ pub(crate) enum Type {
     FloatBig,
     Binary,
     Uuid,
+    Date,
+    Time,
+    Datetime,
+    DatetimeZone,
     //Raw(String),
 }
 
@@ -40,6 +44,10 @@ impl Type {
             Type::FloatBig => "f64",
             Type::Binary => "Vec<u8>",
             Type::Uuid => "uuid::Uuid",
+            Type::Time => "chrono::NaiveDate",
+            Type::Date => "chrono::NaiveTime",
+            Type::Datetime => "chrono::NaiveDateTime",
+            Type::DatetimeZone => "chrono::DateTime<chrono::Utc>",
         }
     }
 }
@@ -57,6 +65,10 @@ impl Display for Type {
             Type::FloatBig => "FloatBig",
             Type::Binary => "Binary",
             Type::Uuid => "Uuid",
+            Type::Date => "Date",
+            Type::Time => "Time",
+            Type::Datetime => "Datetime",
+            Type::DatetimeZone => "DatetimeZone",
         };
         f.write_str(t)?;
         Ok(())
@@ -89,6 +101,12 @@ impl FromStr for Type {
             "float_big" => Type::FloatBig,
             "binary" => Type::Binary,
             "uuid" => Type::Uuid,
+            "date" => Type::Date,
+            "time" => Type::Time,
+            "datetime" => Type::Datetime,
+            "datetimezone" => Type::DatetimeZone,
+            "timestamptz" => Type::DatetimeZone,
+            "datetimetz" => Type::DatetimeZone,
             _ => return Err(()),
         };
         Ok(t)
