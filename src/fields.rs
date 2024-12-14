@@ -44,8 +44,8 @@ impl Type {
             Type::FloatBig => "f64",
             Type::Binary => "Vec<u8>",
             Type::Uuid => "uuid::Uuid",
-            Type::Time => "chrono::NaiveDate",
-            Type::Date => "chrono::NaiveTime",
+            Type::Time => "chrono::NaiveTime",
+            Type::Date => "chrono::NaiveDate",
             Type::Datetime => "chrono::NaiveDateTime",
             Type::DatetimeZone => "chrono::DateTime<chrono::Utc>",
         }
