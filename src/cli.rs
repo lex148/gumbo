@@ -76,6 +76,9 @@ pub(crate) enum GenerateCommands {
         name: String,
         /// List of actions the controller will respond to (index show new create edit update delete)
         actions: Vec<String>,
+        /// Disable the creation of views
+        #[clap(long, action)]
+        no_views: bool,
     },
 
     #[clap(name = "env")]

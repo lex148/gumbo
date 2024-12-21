@@ -8,7 +8,7 @@ use std::str::FromStr;
 use templates::controller;
 use templates::view;
 
-pub(crate) fn generate(name: &str, actions: &[String]) -> Result<()> {
+pub(crate) fn generate(name: &str, actions: &[String], no_views: bool) -> Result<()> {
     let name = name.trim().to_lowercase();
     let root_path = get_root_path()?;
     let names = Names::new(&name);
@@ -25,7 +25,7 @@ pub(crate) fn generate(name: &str, actions: &[String]) -> Result<()> {
         .filter(|a| a.method == "get")
         .cloned()
         .collect();
-    if !view_actions.is_empty() {
+    if !view_actions.is_empty() && no_views == false {
         changes.push(view::write_empty_templates(&names, &view_actions)?);
     }
 

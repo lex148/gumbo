@@ -19,7 +19,11 @@ pub fn run(cmd: &GenerateCommands) {
 
 fn run_inner(cmd: &GenerateCommands) -> Result<()> {
     match cmd {
-        GenerateCommands::Controller { name, actions } => controller::generate(name, actions)?,
+        GenerateCommands::Controller {
+            name,
+            actions,
+            no_views,
+        } => controller::generate(name, actions, *no_views)?,
         GenerateCommands::Scaffold { name, fields } => scaffold::generate(name, fields)?,
         GenerateCommands::Migration { name, fields } => migration::generate(name, fields)?,
         GenerateCommands::Model { name, fields } => model::generate(name, fields)?,
