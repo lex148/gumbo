@@ -19,5 +19,6 @@ fn main() {
         RootCommand::Init { path } => command_handlers::init::run(path),
         RootCommand::Generate { sub_cmd } => command_handlers::generate::run(sub_cmd),
         RootCommand::Convert { sub_cmd } => command_handlers::convert::run(sub_cmd),
+        RootCommand::Database { sub_cmd } => command_handlers::database::run(sub_cmd),
     }
 }

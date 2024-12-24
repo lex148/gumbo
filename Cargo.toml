@@ -20,3 +20,8 @@ cruet = "0.14"
 pluralizer = "0.4"
 rand = "0.8.5"
 thiserror = "1.0"
+welds = { version = '0.4', features=["postgres","mysql","mssql","sqlite","migrations"] }
+welds-connections = { version = '^0.4.9', features=["full"] }
+sqlx = { version = "0.8", features = [ "runtime-tokio-rustls" ] }
+tokio = { version = "1", features=["rt"] }
+

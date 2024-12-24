@@ -24,6 +24,13 @@ pub(crate) enum RootCommand {
         sub_cmd: GenerateCommands,
     },
 
+    /// Used to generate code
+    #[clap(name = "db")]
+    Database {
+        #[clap(subcommand)]
+        sub_cmd: DatabaseCommands,
+    },
+
     /// Automatically convert you code
     #[clap(name = "convert", alias = "c")]
     Convert {
@@ -96,4 +103,11 @@ pub(crate) enum ConvertCommands {
     #[clap(name = "dir2mod")]
     /// Convert a code folder/mod.rs "bla/mod.rs" into a sinple file bla.rs
     Dir2Mod { path: PathBuf },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum DatabaseCommands {
+    #[clap(name = "rollback")]
+    /// Rollback the last welds migration (migrate down)
+    Rollback,
 }
