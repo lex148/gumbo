@@ -24,7 +24,7 @@ pub(crate) enum RootCommand {
         sub_cmd: GenerateCommands,
     },
 
-    /// Used to generate code
+    /// Helpers utils for weldsorm
     #[clap(name = "db")]
     Database {
         #[clap(subcommand)]
