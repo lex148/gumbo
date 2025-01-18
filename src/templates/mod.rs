@@ -3,6 +3,7 @@ use std::path::Path;
 pub(crate) mod asset_controller;
 pub(crate) mod auth_controller;
 pub(crate) mod build;
+pub(crate) mod cargo_config;
 pub(crate) mod controller;
 pub(crate) mod docker;
 pub(crate) mod errors;

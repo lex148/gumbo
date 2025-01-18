@@ -1,8 +1,8 @@
 use crate::change::{write_to_disk, Change};
 use crate::errors::{GumboError, Result};
 use crate::templates::{
-    asset_controller, auth_controller, build, docker, errors, greetings_controller, inputcss, main,
-    migrations, views_mod,
+    asset_controller, auth_controller, build, cargo_config, docker, errors, greetings_controller,
+    inputcss, main, migrations, views_mod,
 };
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -41,6 +41,7 @@ fn run_inner(rootpath: &Path) -> Result<()> {
         vec![Change::new("./src/assets/gumbo.webp", logo.as_slice())?.append()],
         migrations::init::write_template()?,
         docker::write_template()?,
+        cargo_config::write_template()?,
         main::write_template()?,
         crate::command_handlers::generate::dotenv::write_template()?,
         vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
@@ -55,6 +56,11 @@ fn run_inner(rootpath: &Path) -> Result<()> {
     }
 
     super::run_rustfmt(rootpath);
+
+    println!();
+    println!(
+        "To start developing, go to your project and run: \"cargo watch -d 0.0 -w ./src -x run\""
+    );
 
     Ok(())
 }
