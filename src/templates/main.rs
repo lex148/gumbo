@@ -100,7 +100,12 @@ async fn main() -> std::io::Result<()> {
     let client = Data::new(client);
 
     // boot up the server
-    log::info!("Server Running: http://{}", bind_interface);
+    log::info!("Server Running at {}", bind_interface);
+
+    if cfg!(debug_assertions) {
+        log::info!("To start developing go to: http://localhost:{}", port);
+    }
+
     HttpServer::new(move || {
         App::new()
             .app_data(client.clone())

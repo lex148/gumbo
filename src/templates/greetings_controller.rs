@@ -29,13 +29,19 @@ Stimulus.register("greeting", GreetingController);
 static JS_HOT_RELOAD: &str = r#"
 (async function(){
 
+  // If a use clicks an external link, The health check will die. don't fire a reload
+	let isLeaving = false;
+	window.addEventListener('beforeunload', () => { isLeaving = true; });
+
 	fetch("/healthz", { headers: { 'content-type': 'text/event-stream' }})
 		.then( watchForDisconnect )
 		.catch( pollForReboot );
 
-	function reload() {
-		Turbo.cache.clear();
-		window.location = window.location + "";
+  function reload() {
+		if( !isLeaving ) {
+			Turbo.cache.clear();
+			window.location = window.location + "";
+		}
 	}
 
 	let pollCount = 0;
@@ -180,7 +186,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
             <div class="text-gray-600 text-sm" >{"There are a couple of things you should do that make a huge differents while developing"}</div>
             <ol class="text-gray-600 text-sm list-decimal ml-4 mt-1" >
                 <li class="list-item" >
-                  <a href="https://github.com/rui314/mold#user-content-how-to-use">{"Setup mold as your linker"}</a>
+                  <a data-turbo="false" href="https://github.com/rui314/mold#user-content-how-to-use">{"Setup mold as your linker"}</a>
                 </li>
                 <li class="list-item" >
                   {"If you use cargo watch to rebuild while doing a task like styling or working with your HTML make SURE you disable the delay"}
