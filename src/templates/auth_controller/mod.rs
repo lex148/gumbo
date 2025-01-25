@@ -18,7 +18,7 @@ use gumbo_lib::session::Session;
 use actix_web::cookie::time::OffsetDateTime;
 use actix_web::cookie::{Cookie, SameSite};
 use actix_web::{delete, get, web::Path, web::Query, HttpRequest, HttpResponse};
-use oauth2::{reqwest::async_http_client, AuthorizationCode};
+use oauth2::AuthorizationCode;
 use oauth2::{CsrfToken, Scope, TokenResponse};
 use serde::Deserialize;
 
@@ -58,11 +58,17 @@ async fn auth_return(
     let root = siteroot(&req);
     let client = providers::build(provider.as_str(), &root)?;
 
+    let http_client = oauth2::reqwest::ClientBuilder::new()
+        // Following redirects opens the client up to SSRF vulnerabilities.
+        .redirect(oauth2::reqwest::redirect::Policy::none())
+        .build()
+        .expect("Client should build");
+
     // exchange the one time code for a security token
     let code = query.code.to_owned();
     let token = client
         .exchange_code(AuthorizationCode::new(code))
-        .request_async(async_http_client)
+        .request_async(&http_client)
         .await
         .map_err(|err| {
             log::error!("{:?}", err);

@@ -17,7 +17,6 @@ static IGNORE: &str = r#"
 !/Cargo.lock
 !/Cargo.toml
 !/build.rs
-!/tailwind.config.js
 "#;
 
 static CODE: &str = r#"

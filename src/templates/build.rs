@@ -71,7 +71,7 @@ fn download_tailwind(manifest_dir: &Path) {
     #[cfg(target_arch = "x86_64")]
     let arch = "x64";
 
-    let version = "v3.4.3";
+    let version = "v4.0.0";
 
     let url = format!("https://github.com/tailwindlabs/tailwindcss/releases/download/{version}/tailwindcss-{os}-{arch}");
 

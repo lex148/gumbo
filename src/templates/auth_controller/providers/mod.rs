@@ -10,12 +10,38 @@ pub(crate) fn write_template() -> Result<Change> {
 
 static CODE: &str = r##"
 use crate::errors::{oauth_error, Result};
-use oauth2::basic::BasicClient;
+use oauth2::{
+    basic::{
+        BasicErrorResponse, BasicRevocationErrorResponse, BasicTokenIntrospectionResponse,
+        BasicTokenResponse,
+    },
+    Client, EndpointNotSet, EndpointSet, StandardRevocableToken,
+};
 
 mod fakeoauth;
 mod google;
 
-pub(crate) fn build(provider: &str, siteroot: &str) -> Result<BasicClient> {
+/// Basic OAuth2 client specialization, suitable for most applications.
+pub type ReadyClient<
+    HasAuthUrl = EndpointSet,
+    HasDeviceAuthUrl = EndpointNotSet,
+    HasIntrospectionUrl = EndpointNotSet,
+    HasRevocationUrl = EndpointNotSet,
+    HasTokenUrl = EndpointSet,
+> = Client<
+    BasicErrorResponse,
+    BasicTokenResponse,
+    BasicTokenIntrospectionResponse,
+    StandardRevocableToken,
+    BasicRevocationErrorResponse,
+    HasAuthUrl,
+    HasDeviceAuthUrl,
+    HasIntrospectionUrl,
+    HasRevocationUrl,
+    HasTokenUrl,
+>;
+
+pub(crate) fn build(provider: &str, siteroot: &str) -> Result<ReadyClient> {
     let config = match provider {
         "google" => google::build(siteroot)?,
         "fakeoauth" => fakeoauth::build(siteroot)?,

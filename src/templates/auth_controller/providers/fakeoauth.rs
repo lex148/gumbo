@@ -11,6 +11,7 @@ pub(crate) fn write_template() -> Result<Change> {
 static CODE: &str = r##"
 use crate::errors::{oauth_error, Result};
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
+use super::ReadyClient;
 use serde::Deserialize;
 
 /// create a unique identifier for this user
@@ -44,7 +45,7 @@ pub struct UserInfo {
 }
 
 /// returns a client that is setup to login a user using fakeoauth's oauth2 service
-pub(crate) fn build(siteroot: &str) -> Result<BasicClient> {
+pub(crate) fn build(siteroot: &str) -> Result<ReadyClient> {
     // build all the URLs needed fro the client
     let redirect_url = format!("{siteroot}/auth/return/fakeoauth");
     let auth_url = AuthUrl::new("http://127.0.0.1:5860".to_string())
@@ -53,13 +54,11 @@ pub(crate) fn build(siteroot: &str) -> Result<BasicClient> {
         .expect("Invalid token endpoint URL");
 
     // build the client
-    let client = BasicClient::new(
-        ClientId::new("".to_string()),
-        Some(ClientSecret::new("".to_string())),
-        auth_url,
-        Some(token_url),
-    )
-    .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap());
+    let client = BasicClient::new(ClientId::new("".to_string()))
+        .set_client_secret(ClientSecret::new("".to_string()))
+        .set_auth_uri(auth_url)
+        .set_token_uri(token_url)
+        .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap());
 
     Ok(client)
 }

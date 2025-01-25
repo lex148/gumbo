@@ -11,6 +11,7 @@ pub(crate) fn write_template() -> Result<Change> {
 static CODE: &str = r##"
 use crate::errors::{oauth_error, Result};
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl};
+use super::ReadyClient;
 use serde::Deserialize;
 use std::env::var;
 
@@ -51,7 +52,7 @@ pub struct UserInfo {
 }
 
 /// returns a client that is setup to login a user using google's oauth2 service
-pub(crate) fn build(siteroot: &str) -> Result<BasicClient> {
+pub(crate) fn build(siteroot: &str) -> Result<ReadyClient> {
     // Load the configs from ENV
     let client_id = readenv("OAUTH_GOOGLE_CLIENT_ID")?;
     let client_secret = readenv("OAUTH_GOOGLE_CLIENT_SECRET")?;
@@ -63,14 +64,12 @@ pub(crate) fn build(siteroot: &str) -> Result<BasicClient> {
     let token_url = TokenUrl::new("https://www.googleapis.com/oauth2/v3/token".to_string())
         .expect("Invalid token endpoint URL");
 
-    // build the client
-    let client = BasicClient::new(
-        ClientId::new(client_id),
-        Some(ClientSecret::new(client_secret)),
-        auth_url,
-        Some(token_url),
-    )
-    .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap());
+    // // build the client
+    let client = BasicClient::new(ClientId::new(client_id))
+        .set_client_secret(ClientSecret::new(client_secret))
+        .set_auth_uri(auth_url)
+        .set_token_uri(token_url)
+        .set_redirect_uri(RedirectUrl::new(redirect_url).unwrap());
 
     Ok(client)
 }
