@@ -94,6 +94,7 @@ static HEAD: &str = "use crate::errors::{Result, ServerError};
 use crate::DbClient;
 use gumbo_lib::view::{render, redirect};
 use gumbo_lib::Session;
+use uuid::Uuid;
 use welds::prelude::*;
 use actix_web::{get, post, delete, web::Path, web::Form, HttpResponse};
 ";

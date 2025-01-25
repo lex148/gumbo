@@ -7,7 +7,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     format!(
         r#"
 #[delete("/{indexaction}/{{id}}")]
-pub(crate) async fn delete(db: DbClient, path: Path<i32>, _session: Option<Session>) -> Result<HttpResponse> {{
+pub(crate) async fn delete(db: DbClient, path: Path<Uuid>, _session: Option<Session>) -> Result<HttpResponse> {{
     let id = path.into_inner();
     let mut {model} = {model_struct}::find_by_id(db.as_ref(), id)
         .await?

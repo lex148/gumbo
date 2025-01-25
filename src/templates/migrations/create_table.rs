@@ -32,7 +32,7 @@ fn build(names: &Names, fields: &[Field], migration_name: &str) -> Result<String
     let tablename = &names.table_name;
     let mut parts = vec![HEAD.trim().to_owned(), fn_name(names)];
     parts.push(format!("\n    let m = create_table(\"{tablename}\")"));
-    parts.push("\n        .id(|c| c(\"id\", Type::IntBig))".to_owned());
+    parts.push("\n        .id(|c| c(\"id\", Type::Uuid))".to_owned());
 
     for f in fields {
         parts.push(add_field(f));

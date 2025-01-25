@@ -9,7 +9,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     format!(
         r#"
 #[post("/{indexaction}/{{id}}")]
-pub(crate) async fn update(db: DbClient, path: Path<i32>, params: Form<UpdateParams>, _session: Option<Session>) -> Result<HttpResponse> {{
+pub(crate) async fn update(db: DbClient, path: Path<Uuid>, params: Form<UpdateParams>, _session: Option<Session>) -> Result<HttpResponse> {{
     let id = path.into_inner();
     let mut {model} = {model_struct}::find_by_id(db.as_ref(), id)
         .await?

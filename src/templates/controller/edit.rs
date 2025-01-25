@@ -8,7 +8,7 @@ pub(crate) fn crud_template(names: &Names) -> String {
     format!(
         r#"
 #[get("/{indexaction}/{{id}}/edit")]
-pub(crate) async fn edit(db: DbClient, path: Path<i32>, session: Option<Session>) -> Result<HttpResponse> {{
+pub(crate) async fn edit(db: DbClient, path: Path<Uuid>, session: Option<Session>) -> Result<HttpResponse> {{
     let id = path.into_inner();
     let {model} = {model_struct}::find_by_id(db.as_ref(), id)
         .await?

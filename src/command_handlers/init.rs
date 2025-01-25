@@ -99,7 +99,7 @@ fn cargo_init(path: &Path) -> Result<()> {
     add_dependencies(path, &["add", "welds", "--features=sqlite,migrations"])?;
     add_dependencies(
         path,
-        &["add", "sqlx", "--features=runtime-tokio,tls-rustls"],
+        &["add", "sqlx", "--features=runtime-tokio,tls-rustls,uuid"],
     )?;
     add_dependencies(path, &["add", "thiserror"])?;
     add_dependencies(path, &["add", "actix-web"])?;
@@ -109,6 +109,7 @@ fn cargo_init(path: &Path) -> Result<()> {
     add_dependencies(path, &["add", "pretty_env_logger"])?;
     add_dependencies(path, &["add", "yew", "--features=ssr"])?;
     add_dependencies(path, &["add", "tokio", "--features=sync"])?;
+    add_dependencies(path, &["add", "uuid", "--features=v4,serde"])?;
     add_dependencies(path, &["add", "aes-gcm"])?;
     add_dependencies(path, &["add", "base64"])?;
     add_dependencies(path, &["add", "bincode"])?;
