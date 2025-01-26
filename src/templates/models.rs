@@ -11,12 +11,15 @@ pub(crate) fn write_template(names: &Names, fields: &[Field]) -> Result<Vec<Chan
 }
 
 fn build(names: &Names, fields: &[Field]) -> Result<String> {
-    let id_field = [Field::from_str("id:uuid")?];
-    let innerds: Vec<String> = id_field
-        .iter()
-        .chain(fields.iter())
-        .map(field_line)
-        .collect();
+    // the ID field, or use a default
+    let id_field: Option<Field> = fields.iter().find(|x| x.name == "id").cloned();
+    let id_field: Field = id_field.unwrap_or(Field::from_str("id:uuid")?);
+    let id_field = [id_field];
+
+    // the fields without any IDs
+    let fields = fields.iter().filter(|x| x.name != "id");
+
+    let innerds: Vec<String> = id_field.iter().chain(fields).map(field_line).collect();
     let innerds: String = innerds.join("\n");
     let table_name = &names.table_name;
     let model_name = &names.model_struct;

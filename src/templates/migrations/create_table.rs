@@ -32,10 +32,14 @@ fn build(names: &Names, fields: &[Field], migration_name: &str) -> Result<String
     let tablename = &names.table_name;
     let mut parts = vec![HEAD.trim().to_owned(), fn_name(names)];
     parts.push(format!("\n    let m = create_table(\"{tablename}\")"));
-    parts.push("\n        .id(|c| c(\"id\", Type::Uuid))".to_owned());
+
+    let pk_field = fields.iter().find(|x| x.name == "id");
+    parts.push(add_pk(pk_field));
 
     for f in fields {
-        parts.push(add_field(f));
+        if f.name != "id" {
+            parts.push(add_field(f));
+        }
     }
 
     parts.push(";\n".to_owned());
@@ -52,6 +56,15 @@ use welds::migrations::{create_table, types::Type, MigrationStep, TableState};
 
 fn fn_name(_name: &Names) -> String {
     "\n\npub(super) fn step(_state: &TableState) -> Result<MigrationStep> {".to_string()
+}
+
+fn add_pk(field: Option<&Field>) -> String {
+    let field = match field {
+        Some(f) => f,
+        None => return "\n        .id(|c| c(\"id\", Type::Uuid))".to_owned(),
+    };
+    let ty = &field.ty;
+    format!("\n        .id(|c| c(\"id\", Type::{ty}))")
 }
 
 fn add_field(field: &Field) -> String {
