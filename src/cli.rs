@@ -63,6 +63,9 @@ pub(crate) enum GenerateCommands {
         /// List of fields for model. Example: name:string description:text:option
         ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
         fields: Vec<String>,
+        /// Disable migration generate
+        #[clap(long, action)]
+        no_migration: bool,
     },
 
     #[clap(name = "migration", alias = "db")]

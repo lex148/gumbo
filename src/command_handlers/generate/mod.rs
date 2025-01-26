@@ -26,7 +26,11 @@ fn run_inner(cmd: &GenerateCommands) -> Result<()> {
         } => controller::generate(name, actions, *no_views)?,
         GenerateCommands::Scaffold { name, fields } => scaffold::generate(name, fields)?,
         GenerateCommands::Migration { name, fields } => migration::generate(name, fields)?,
-        GenerateCommands::Model { name, fields } => model::generate(name, fields)?,
+        GenerateCommands::Model {
+            name,
+            fields,
+            no_migration,
+        } => model::generate(name, fields, *no_migration)?,
         GenerateCommands::Env {} => dotenv::generate()?,
     }
     Ok(())

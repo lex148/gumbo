@@ -6,7 +6,7 @@ use crate::names::Names;
 use crate::templates::{migrations, models};
 use std::str::FromStr;
 
-pub(crate) fn generate(name: &str, fields: &[String]) -> Result<()> {
+pub(crate) fn generate(name: &str, fields: &[String], no_migration: bool) -> Result<()> {
     let root_path = get_root_path()?;
     let names = Names::new(name);
 
@@ -15,16 +15,19 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<()> {
 
     let fields = fields?;
 
-    let changes = [
-        models::write_template(&names, &fields)?,
-        migrations::create_table::write_template(&root_path, &names, &fields)?,
-    ];
+    let mut changes = vec![models::write_template(&names, &fields)?];
 
-    for change in changes.as_ref().iter().flatten() {
+    if !no_migration {
+        changes.push(migrations::create_table::write_template(
+            &root_path, &names, &fields,
+        )?);
+    }
+
+    for change in changes.as_slice().iter().flatten() {
         println!("FILE: {:?}", change.file());
     }
 
-    for change in changes.as_ref().iter().flatten() {
+    for change in changes.as_slice().iter().flatten() {
         write_to_disk(&root_path, change)?;
     }
 
