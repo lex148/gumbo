@@ -1,5 +1,5 @@
 use crate::cli::DatabaseCommands;
-use welds::errors::{Result, WeldsError};
+use welds::errors::Result;
 
 /// Called to to crate a new gumbo project
 pub fn run(cmd: &DatabaseCommands) {
@@ -26,7 +26,7 @@ fn welds_rollback() -> Result<()> {
 }
 
 async fn welds_rollback_inner() -> Result<()> {
-    let trans_start = welds::connections::connect_transstart_from_env().await?;
+    let trans_start = welds::connections::connect_from_env().await?;
     let name = welds::migrations::down_last(trans_start.as_ref()).await?;
     println!("Migration Down Complete: {:?}", name);
     Ok(())

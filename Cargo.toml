@@ -1,6 +1,6 @@
 [package]
 name = "gumbo"
-version = "0.1.15"
+version = "0.1.16"
 edition = "2021"
 license = "BSD-3-Clause"
 readme = "README.md"
@@ -21,6 +21,6 @@ pluralizer = "0.4"
 rand = "0.8.5"
 thiserror = "1.0"
 welds = { version = '0.4', features=["postgres","mysql","mssql","sqlite","migrations"] }
-welds-connections = { version = '^0.4.9', features=["full"] }
+welds-connections = { version = '^0.4.13', features=["full"] }
 sqlx = { version = "0.8", features = [ "runtime-tokio-rustls" ] }
 tokio = { version = "1", features=["rt"] }
