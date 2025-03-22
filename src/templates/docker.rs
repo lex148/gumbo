@@ -20,7 +20,7 @@ static IGNORE: &str = r#"
 "#;
 
 static CODE: &str = r#"
-FROM clux/muslrust:1.77.2-stable AS chef
+FROM clux/muslrust:amd64-1.84.1-stable-2025-02-18 AS chef
 RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \ 
   && chmod a+xr tailwindcss-linux-x64 \
   && mv tailwindcss-linux-x64 /usr/bin/tailwindcss

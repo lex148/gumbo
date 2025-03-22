@@ -62,14 +62,14 @@ mod migrations;
 mod models;
 mod views;
 
-use welds::connections::sqlite::SqliteClient;
-pub(crate) type DbClient = actix_web::web::Data<SqliteClient>;
+use welds::connections::any::AnyClient;
+pub(crate) type DbClient = actix_web::web::Data<AnyClient>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // default log level to info
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "info");
+        unsafe{ std::env::set_var("RUST_LOG", "info"); }
     }
     pretty_env_logger::init();
     if let Err(err) = dotenvy::dotenv() {
@@ -92,7 +92,7 @@ async fn main() -> std::io::Result<()> {
     // Connect to the database and run the migrations
     let connection_string =
         env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://./dev.sqlite".to_owned());
-    let client = welds::connections::sqlite::connect(&connection_string)
+    let client = welds::connections::connect(&connection_string)
         .await
         .expect("Unable to connect to Database");
     migrations::up(&client).await.unwrap();
