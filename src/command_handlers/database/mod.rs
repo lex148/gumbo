@@ -1,5 +1,6 @@
 use crate::cli::DatabaseCommands;
 use welds::errors::Result;
+use welds::Client;
 
 /// Called to to crate a new gumbo project
 pub fn run(cmd: &DatabaseCommands) {
@@ -12,7 +13,24 @@ pub fn run(cmd: &DatabaseCommands) {
 fn run_inner(cmd: &DatabaseCommands) -> Result<()> {
     match cmd {
         DatabaseCommands::Rollback {} => welds_rollback()?,
+        DatabaseCommands::TestConnection {} => test_connection()?,
     }
+    Ok(())
+}
+
+fn test_connection() -> Result<()> {
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_time()
+        .enable_io()
+        .build()
+        .unwrap();
+    rt.block_on(async { test_connection_inner().await })
+}
+
+async fn test_connection_inner() -> Result<()> {
+    let pool = welds::connections::connect_from_env().await?;
+    pool.execute("SELECT 1", &[]).await?;
+    println!("CONNECTED TO DATABASE");
     Ok(())
 }
 

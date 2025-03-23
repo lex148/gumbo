@@ -113,4 +113,8 @@ pub(crate) enum DatabaseCommands {
     #[clap(name = "rollback")]
     /// Rollback the last welds migration (migrate down)
     Rollback,
+    #[clap(name = "test-connection")]
+    /// Checks that gumbo and connect to your database.
+    /// Gumbo looks for a connection string in the ENV DATABASE_URL
+    TestConnection,
 }
