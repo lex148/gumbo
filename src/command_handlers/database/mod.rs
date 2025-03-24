@@ -1,6 +1,7 @@
 use crate::cli::DatabaseCommands;
 use welds::errors::Result;
 use welds::Client;
+mod list_tables;
 
 /// Called to to crate a new gumbo project
 pub fn run(cmd: &DatabaseCommands) {
@@ -14,6 +15,12 @@ fn run_inner(cmd: &DatabaseCommands) -> Result<()> {
     match cmd {
         DatabaseCommands::Rollback {} => welds_rollback()?,
         DatabaseCommands::TestConnection {} => test_connection()?,
+        DatabaseCommands::ListTables {} => list_tables::run()?,
+        DatabaseCommands::ListViews {} => list_tables::run_views()?,
+        DatabaseCommands::Describe { table } => list_tables::describe(&table)?,
+        DatabaseCommands::ModelFromTable { tables } => {
+            println!("models from tables");
+        }
     }
     Ok(())
 }
