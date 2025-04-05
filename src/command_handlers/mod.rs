@@ -20,7 +20,7 @@ fn run_rustfmt_inner(root_path: &Path) -> Result<(), String> {
     // Execute the rustfmt command
     let result = Command::new("sh")
         .current_dir(root_path)
-        .args(["-c", r#"rustfmt --edition 2021 ./**/*.rs"#])
+        .args(["-c", r#"rustfmt --edition 2024 ./**/*.rs"#])
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status();

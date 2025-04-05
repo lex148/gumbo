@@ -49,11 +49,23 @@ RUN find /app/src/assets -type d -exec chmod a+rx {} \;
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin server
 RUN strip /app/target/x86_64-unknown-linux-musl/release/server
 
+# Use an intermediate image to gather CA certificates
+FROM debian:buster AS certs
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
+# copy the linked certs to a hard copy
+RUN cp -Lr /etc/ssl/certs /etc/ssl/certs_hardcopy
+# give access to the certs to user 1001
+RUN find /etc -type d -exec chmod uga+r {} \; && \
+    find /etc -type d -exec chmod uga+x {} \; && \
+    find /etc -type f -exec chmod uga+r {} \; && \
+    chmod uga+r /etc && \
+    chmod uga+x /etc
 
 # Build runtime image
 FROM scratch AS runtime
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/server /app/server
 COPY --from=builder /app/src/assets /src/assets
+COPY --from=certs /etc/ssl/certs_hardcopy /etc/ssl/certs
 USER 1001
 ENV RUST_LOG="info,sqlx=warn"
 ENV HOST="0.0.0.0"
