@@ -67,17 +67,13 @@ pub(crate) type DbClient = actix_web::web::Data<AnyClient>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // default log level to info
-    if std::env::var("RUST_LOG").is_err() {
-        unsafe{ std::env::set_var("RUST_LOG", "info"); }
-    }
-    pretty_env_logger::init();
     if let Err(err) = dotenvy::dotenv() {
         match err {
             dotenvy::Error::Io(_) => {}
-            _ => log::warn!("DOTENV: {:?}", err),
+            _ => eprintln!("DOTENV: {:?}", err),
         }
     }
+    pretty_env_logger::init();
 
     // read the environment variables to find what Interface to bind to
     let port = env::var("PORT").unwrap_or_else(|_| "3000".to_owned());

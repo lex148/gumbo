@@ -19,7 +19,9 @@ impl FromStr for Action {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<_> = s.trim().split(':').collect();
         if parts.len() > 2 || parts.is_empty() {
-            eprintln!("unknown format for action name: expected action the format of 'action:method' or 'action' ");
+            eprintln!(
+                "unknown format for action name: expected action the format of 'action:method' or 'action' "
+            );
         }
         let method = parts
             .get(1)

@@ -1,6 +1,7 @@
 use crate::cli::DatabaseCommands;
-use welds::errors::Result;
 use welds::Client;
+use welds::errors::Result;
+mod list_tables;
 
 /// Called to to crate a new gumbo project
 pub fn run(cmd: &DatabaseCommands) {

@@ -50,7 +50,7 @@ fn build(names: &Names, fields: &[Field], migration_name: &str) -> Result<String
 
 static HEAD: &str = r#"
 use welds::errors::Result;
-use welds::migrations::{create_table, types::Type, MigrationStep, TableState};
+use welds::migrations::prelude::*;
 
 "#;
 
@@ -103,7 +103,7 @@ mod tests {
 
     static EXPECTED: &str = r#"
 use welds::errors::Result;
-use welds::migrations::{create_table, types::Type, MigrationFn, MigrationStep, TableState};
+use welds::migrations::prelude::*;
 
 pub(super) fn step(_state: &TableState) -> Result<MigrationStep> {
     let m = create_table("car_prices")

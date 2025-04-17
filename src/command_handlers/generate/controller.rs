@@ -1,6 +1,6 @@
 use super::get_root_path;
 use crate::action::Action;
-use crate::change::{write_to_disk, Change};
+use crate::change::{Change, write_to_disk};
 use crate::errors::Result;
 use crate::names::Names;
 use crate::templates;
