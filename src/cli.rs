@@ -117,4 +117,19 @@ pub(crate) enum DatabaseCommands {
     /// Checks that gumbo and connect to your database.
     /// Gumbo looks for a connection string in the ENV DATABASE_URL
     TestConnection,
+    /// Prints out a list of tables in the database
+    ListTables,
+    /// Prints out a list of views in the database
+    ListViews,
+    /// Prints out the columns and types of a table/view
+    Describe { table: String },
+    //  #[clap(name = "model-from-table", alias = "m")]
+    //  /// Create a model from a database table
+    //  ModelFromTable {
+    //      /// list of Tables to import into models
+    //      tables: Vec<String>,
+    //      //  /// Generate models from all tables in the database
+    //      //  #[clap(long, action)]
+    //      //  all-tables: bool,
+    //  },
 }

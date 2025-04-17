@@ -15,6 +15,12 @@ fn run_inner(cmd: &DatabaseCommands) -> Result<()> {
     match cmd {
         DatabaseCommands::Rollback {} => welds_rollback()?,
         DatabaseCommands::TestConnection {} => test_connection()?,
+        DatabaseCommands::ListTables {} => list_tables::run()?,
+        DatabaseCommands::ListViews {} => list_tables::run_views()?,
+        DatabaseCommands::Describe { table } => list_tables::describe(table)?,
+        // DatabaseCommands::ModelFromTable { tables } => {
+        //     println!("models from tables");
+        // }
     }
     Ok(())
 }
