@@ -2,11 +2,9 @@ use crate::change::Change;
 use crate::errors::Result;
 
 pub(crate) fn write_template() -> Result<Vec<Change>> {
-    Ok(vec![Change::new(
-        "./src/controllers/assets_controller.rs",
-        CODE,
-    )?
-    .add_parent_mod()])
+    Ok(vec![
+        Change::new("./src/controllers/assets_controller.rs", CODE)?.add_parent_mod(),
+    ])
 }
 
 static CODE: &str = r#"

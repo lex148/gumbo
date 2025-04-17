@@ -1,4 +1,4 @@
-use welds::detect::{find_tables, DataType};
+use welds::detect::{DataType, find_tables};
 use welds::errors::Result;
 use welds::model_traits::TableIdent;
 
@@ -103,8 +103,8 @@ async fn describe_inner(tablename: &str) -> Result<()> {
         pk: c.primary_key(),
     });
 
-    use tabled::settings::Style;
     use tabled::Table;
+    use tabled::settings::Style;
     let table = Table::new(rows).with(Style::psql()).to_string();
     println!("{}\n", table);
 

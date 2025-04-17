@@ -3,9 +3,7 @@ pub type Result<T> = std::result::Result<T, GumboError>;
 
 #[derive(Debug, Error)]
 pub enum GumboError {
-    #[error(
-        "Could not find the root path of a gumbo project. Are you working in a gumbo project?"
-    )]
+    #[error("Could not find the root path of a gumbo project. Are you working in a gumbo project?")]
     InvalidRootPath,
     #[error("Error Adding Dependencies: {0}")]
     DependenciesFailed(String),
