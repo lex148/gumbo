@@ -1,4 +1,4 @@
-use crate::change::{write_to_disk, Change};
+use crate::change::{Change, write_to_disk};
 use crate::errors::{GumboError, Result};
 use crate::templates::{
     asset_controller, auth_controller, build, cargo_config, docker, errors, greetings_controller,
