@@ -12,6 +12,14 @@ pub(crate) mod names;
 pub(crate) mod templates;
 
 fn main() {
+    // Read .env file and setup logging
+    if let Err(err) = dotenvy::dotenv() {
+        match err {
+            dotenvy::Error::Io(_) => {}
+            _ => eprintln!("DOTENV: {:?}", err),
+        }
+    }
+
     let arg = cli::Cli::parse();
 
     // send the command to its command handler

@@ -776,6 +776,7 @@ dependencies = [
  "clap",
  "codegen",
  "cruet",
+ "dotenvy",
  "pluralizer",
  "rand 0.8.5",
  "sqlx",
