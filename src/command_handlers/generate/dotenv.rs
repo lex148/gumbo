@@ -22,6 +22,10 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
     Ok(vec![Change::new("./.env", build_envfile())?])
 }
 
+pub(crate) fn write_template_lite() -> Result<Vec<Change>> {
+    Ok(vec![Change::new("./.env", build_envfile_lite())?])
+}
+
 fn rand_auth_secret() -> String {
     let mut rng = OsRng;
     let mut bytes = [0u8; 32];
@@ -43,4 +47,13 @@ RUST_LOG=info
 AUTH_SECRET={auth_secret}
    "##,
     )
+}
+
+fn build_envfile_lite() -> String {
+    r##"
+RUST_LOG=info
+DATABASE_URL=sqlite://./dev.sqlite
+   "##
+    .trim()
+    .to_owned()
 }

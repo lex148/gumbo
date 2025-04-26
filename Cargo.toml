@@ -9,8 +9,10 @@ description = "Best of the best rust projects all mixed together into a website 
 categories = ["web-programming", "development-tools"]
 keywords = ["web", "cli", "server", "generator", "tool"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+"default" = []
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 base64 = "0.22.1"
 chrono = "0.4"

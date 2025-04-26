@@ -8,11 +8,15 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
     Ok(vec![Change::new("./src/main.rs", CODE)?])
 }
 
+pub(crate) fn write_template_welds_only() -> Result<Vec<Change>> {
+    Ok(vec![Change::new("./src/main.rs", CODE_WELDS_ONLY)?])
+}
+
 /// Adds a route to the list of actix services
 pub(crate) fn append_service(path: &Path, service: impl Into<String>) -> crate::errors::Result<()> {
     let service: String = service.into();
 
-    let mut file = File::options().write(true).read(true).open(&path)?;
+    let mut file = File::options().write(true).read(true).open(path)?;
     file.rewind()?;
     let mut content = String::default();
     file.read_to_string(&mut content)?;
@@ -119,5 +123,37 @@ async fn main() -> std::io::Result<()> {
     .bind(bind_interface)?
     .run()
     .await
+}
+"#;
+
+const CODE_WELDS_ONLY: &str = r#"
+use std::env;
+use welds::prelude::*;
+
+mod errors;
+mod migrations;
+mod models;
+
+#[tokio::main]
+async fn main() -> welds::errors::Result<()> {
+    // Read .env file and setup logging
+    if let Err(err) = dotenvy::dotenv() {
+        match err {
+            dotenvy::Error::Io(_) => {}
+            _ => eprintln!("DOTENV: {:?}", err),
+        }
+    }
+    pretty_env_logger::init();
+
+    // Connect to the database and run the migrations
+    let connection_string = env::var("DATABASE_URL").unwrap(); // default value in .env file
+    let client = welds::connections::connect(&connection_string)
+        .await
+        .expect("Unable to connect to Database");
+    migrations::up(&client).await.unwrap();
+
+
+
+    Ok(())
 }
 "#;

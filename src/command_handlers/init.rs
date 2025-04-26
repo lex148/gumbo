@@ -8,15 +8,100 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 /// Called to to crate a new gumbo project
-pub fn run(path: &Path) {
-    if let Err(err) = run_inner(path) {
+pub fn run(path: &Path, welds_only: bool) {
+    if welds_only {
+        if let Err(err) = run_inner_welds_only(path) {
+            eprintln!("{err}");
+            std::process::exit(1);
+        }
+    } else if let Err(err) = run_inner(path) {
         eprintln!("{err}");
         std::process::exit(1);
     }
 }
 
+fn run_inner_welds_only(rootpath: &Path) -> Result<()> {
+    cargo_init(rootpath, None)?;
+
+    add_dependencies(rootpath, &["add", "welds", "--features=sqlite,migrations"])?;
+    add_dependencies(
+        rootpath,
+        &["add", "sqlx", "--features=runtime-tokio,tls-rustls,uuid"],
+    )?;
+    add_dependencies(rootpath, &["add", "log"])?;
+    add_dependencies(rootpath, &["add", "pretty_env_logger"])?;
+    add_dependencies(
+        rootpath,
+        &["add", "tokio", "--features=rt-multi-thread,macros"],
+    )?;
+    add_dependencies(rootpath, &["add", "uuid", "--features=v4,serde"])?;
+    add_dependencies(rootpath, &["add", "dotenvy"])?;
+
+    let changes = [
+        //errors::write_template()?,
+        vec![
+            Change::new(
+                "./src/errors/mod.rs",
+                "pub type Result<T> = welds::errors::Result<T>;",
+            )?
+            .append(),
+        ],
+        vec![Change::new("./dev.sqlite", "")?.append()],
+        vec![Change::new("./src/models/mod.rs", "")?.append()],
+        migrations::init::write_template()?,
+        main::write_template_welds_only()?,
+        crate::command_handlers::generate::dotenv::write_template_lite()?,
+        vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
+    ];
+
+    for change in changes.as_ref().iter().flatten() {
+        println!("CREATING: {:?}", change.file());
+    }
+
+    for change in changes.as_ref().iter().flatten() {
+        write_to_disk(rootpath, change)?;
+    }
+
+    super::run_rustfmt(rootpath);
+
+    //println!();
+    //println!(
+    //    "To start developing, go to your project and run: \"cargo watch -d 0.0 -w ./src -x run\""
+    //);
+
+    Ok(())
+}
+
 fn run_inner(rootpath: &Path) -> Result<()> {
-    cargo_init(rootpath)?;
+    cargo_init(rootpath, Some("server"))?;
+
+    add_dependencies(rootpath, &["add", "welds", "--features=sqlite,migrations"])?;
+    add_dependencies(
+        rootpath,
+        &["add", "sqlx", "--features=runtime-tokio,tls-rustls,uuid"],
+    )?;
+    add_dependencies(rootpath, &["add", "thiserror"])?;
+    add_dependencies(rootpath, &["add", "actix-web"])?;
+    add_dependencies(rootpath, &["add", "actix-files"])?;
+    add_dependencies(rootpath, &["add", "log"])?;
+    add_dependencies(rootpath, &["add", "serde"])?;
+    add_dependencies(rootpath, &["add", "pretty_env_logger"])?;
+    add_dependencies(rootpath, &["add", "yew", "--features=ssr"])?;
+    add_dependencies(rootpath, &["add", "tokio", "--features=sync"])?;
+    add_dependencies(rootpath, &["add", "uuid", "--features=v4,serde"])?;
+    add_dependencies(rootpath, &["add", "aes-gcm"])?;
+    add_dependencies(rootpath, &["add", "base64"])?;
+    add_dependencies(rootpath, &["add", "bincode"])?;
+    add_dependencies(rootpath, &["add", "dotenvy"])?;
+    add_dependencies(rootpath, &["add", "futures"])?;
+    add_dependencies(rootpath, &["add", "oauth2"])?;
+    add_dependencies(rootpath, &["add", "rand"])?;
+    add_dependencies(
+        rootpath,
+        &["add", "gumbo-lib", "--features=sessions,turbo-streams"],
+    )?;
+    // version 0.11 to match auth2
+    add_dependencies(rootpath, &["add", "reqwest@0.11", "--features=json"])?;
 
     let full = std::fs::canonicalize(rootpath)?;
     let name: String = full
@@ -66,7 +151,7 @@ fn run_inner(rootpath: &Path) -> Result<()> {
 }
 
 /// runs cargo into to crate the project
-fn cargo_init(path: &Path) -> Result<()> {
+fn cargo_init(path: &Path, name: Option<&str>) -> Result<()> {
     // If the cargo project already exists skip this step
     let mut toml_path: PathBuf = path.to_path_buf();
     toml_path.push("Cargo.toml");
@@ -78,11 +163,22 @@ fn cargo_init(path: &Path) -> Result<()> {
     let path_str = path
         .to_str()
         .ok_or(GumboError::CargoInitFailed("Bad Path".to_owned()))?;
-    let out = Command::new("cargo")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .args(["init", path_str, "--name=server"])
-        .output();
+
+    let out = match name {
+        Some(name) => {
+            let namearg = format!("--name={}", name);
+            Command::new("cargo")
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .args(["init", path_str, &namearg])
+                .output()
+        }
+        None => Command::new("cargo")
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .args(["init", path_str])
+            .output(),
+    };
 
     match out {
         Err(err) => {
@@ -95,34 +191,6 @@ fn cargo_init(path: &Path) -> Result<()> {
             }
         }
     }
-
-    add_dependencies(path, &["add", "welds", "--features=sqlite,migrations"])?;
-    add_dependencies(
-        path,
-        &["add", "sqlx", "--features=runtime-tokio,tls-rustls,uuid"],
-    )?;
-    add_dependencies(path, &["add", "thiserror"])?;
-    add_dependencies(path, &["add", "actix-web"])?;
-    add_dependencies(path, &["add", "actix-files"])?;
-    add_dependencies(path, &["add", "log"])?;
-    add_dependencies(path, &["add", "serde"])?;
-    add_dependencies(path, &["add", "pretty_env_logger"])?;
-    add_dependencies(path, &["add", "yew", "--features=ssr"])?;
-    add_dependencies(path, &["add", "tokio", "--features=sync"])?;
-    add_dependencies(path, &["add", "uuid", "--features=v4,serde"])?;
-    add_dependencies(path, &["add", "aes-gcm"])?;
-    add_dependencies(path, &["add", "base64"])?;
-    add_dependencies(path, &["add", "bincode"])?;
-    add_dependencies(path, &["add", "dotenvy"])?;
-    add_dependencies(path, &["add", "futures"])?;
-    add_dependencies(path, &["add", "oauth2"])?;
-    add_dependencies(path, &["add", "rand"])?;
-    add_dependencies(
-        path,
-        &["add", "gumbo-lib", "--features=sessions,turbo-streams"],
-    )?;
-    // version 0.11 to match auth2
-    add_dependencies(path, &["add", "reqwest@0.11", "--features=json"])?;
 
     Ok(())
 }

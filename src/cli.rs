@@ -13,6 +13,9 @@ pub(crate) struct Cli {
 pub(crate) enum RootCommand {
     /// Create a new project all setup for gumbo
     Init {
+        /// When set, the project that is initialized is only setup for welds, not a full actix website
+        #[clap(long, action)]
+        welds_only: bool,
         /// Path to where to initialize the new project
         path: PathBuf,
     },

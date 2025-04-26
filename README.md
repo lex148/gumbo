@@ -3,12 +3,13 @@
 <div align="center">
   <h1>Gumbo</h1>
   <img src="https://raw.githubusercontent.com/lex148/gumbo/main/src/templates/logo.webp"/>
-  <h3>Best of the best rust projects all mixed together into a website framework</h3>
+  <h3>Best of the best rust projects all mixed together</h3>
 </div>
 
 # Gumbo
 
-Gumbo is a powerful and easy-to-use tool designed to help you quickly scaffold and template basic websites, similar to Ruby on Rails. Gumbo leverages the robustness of Actix for the backend, the modern frontend capabilities of Yew, and the efficient ORM capabilities of Welds. With Gumbo, you can streamline your web development process, ensuring a smooth and efficient workflow from start to finish.
+Gumbo is a powerful and easy-to-use CLI tool designed to help you quickly interact with Welds-ORM, Scaffold websites, or Actix.
+It is built for each of these pieces individually or as a tool to work with them all together.
 
 
 ## Installation
