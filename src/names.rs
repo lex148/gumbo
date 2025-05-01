@@ -1,11 +1,13 @@
 use cruet::Inflector;
 use std::path::PathBuf;
+use welds::model_traits::TableIdent;
 
 #[derive(Debug)]
 pub(crate) struct Names {
     pub(crate) controller_mod: String,
     pub(crate) controller_path: PathBuf,
     pub(crate) table_name: String,
+    pub(crate) schema_name: Option<String>,
     pub(crate) model_struct: String,
     pub(crate) model_mod: String,
     pub(crate) model_path: PathBuf,
@@ -15,22 +17,48 @@ pub(crate) struct Names {
 
 impl Names {
     pub(crate) fn new(name: &str) -> Names {
-        let p = pluralizer::pluralize(name.trim(), 10, false).to_snake_case();
-        let s = pluralizer::pluralize(name.trim(), 1, false).to_snake_case();
+        let mut parts: Vec<_> = name.trim().split(".").collect();
+        let tablename = parts.pop().unwrap();
+        let schema_name = parts.pop().map(|x| x.to_string());
+
+        let p = pluralizer::pluralize(tablename.trim(), 10, false).to_snake_case();
+        let s = pluralizer::pluralize(tablename.trim(), 1, false).to_snake_case();
         let class = s.to_class_case();
-        let model_path = PathBuf::from(format!("./src/models/{s}/mod.rs"));
+
+        let model_path = match &schema_name {
+            Some(schemaname) => PathBuf::from(format!("./src/models/{schemaname}/{s}/mod.rs")),
+            None => PathBuf::from(format!("./src/models/{s}/mod.rs")),
+        };
+
         let controller_path = PathBuf::from(format!("./src/controllers/{p}_controller/mod.rs"));
 
         Names {
             controller_mod: format!("{p}_controller"),
             controller_path,
             table_name: p.to_owned(),
+            schema_name,
             model_struct: class,
             model_mod: s.to_owned(),
             model_path,
             view_mod: p.to_owned(),
             title: p.to_title_case(),
         }
+    }
+
+    /// returns a welds attribute to use to link a model to a table
+    pub(crate) fn welds_table_attribute(&self) -> String {
+        let table_name = &self.table_name;
+        match &self.schema_name {
+            Some(schemaname) => {
+                format!("#[welds(schema = \"{schemaname}\", table = \"{table_name}\")]")
+            }
+            None => format!("#[welds(table = \"{table_name}\")]"),
+        }
+    }
+
+    /// returns a welds attribute to use to link a model to a table
+    pub(crate) fn table_ident(&self) -> TableIdent {
+        TableIdent::new(self.table_name.to_string(), self.schema_name.clone())
     }
 }
 
@@ -76,6 +104,15 @@ mod tests {
     }
 
     #[test]
+    fn model_path_with_schema() {
+        let n = Names::new("car.Price");
+        assert_eq!(
+            n.model_path.to_str().unwrap(),
+            "./src/models/car/price/mod.rs"
+        );
+    }
+
+    #[test]
     fn view_mod() {
         let n = Names::new("carPrice");
         assert_eq!(n.view_mod, "car_prices");
@@ -85,5 +122,12 @@ mod tests {
     fn table_name() {
         let n = Names::new("carPrice");
         assert_eq!(n.view_mod, "car_prices");
+    }
+
+    #[test]
+    fn table_name_with_schema() {
+        let n = Names::new("car.Price");
+        assert_eq!(n.table_name, "prices");
+        assert_eq!(n.schema_name.as_deref(), Some("car"));
     }
 }

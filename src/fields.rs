@@ -4,9 +4,21 @@ use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Field {
+    pub(crate) visibility: Visibility,
+    pub(crate) primary_key: bool,
+    pub(crate) welds_ignored: bool,
     pub(crate) name: String,
     pub(crate) ty: Type,
     pub(crate) null: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) enum Visibility {
+    Private,
+    Pub,
+    #[default]
+    PubCrate,
+    PubSuper,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,7 +40,7 @@ pub(crate) enum Type {
     Time,
     Datetime,
     DatetimeZone,
-    //Raw(String),
+    Raw(String /*SQL*/, String /*Rust*/),
 }
 
 impl Type {
@@ -48,6 +60,7 @@ impl Type {
             Type::Date => "chrono::NaiveDate",
             Type::Datetime => "chrono::NaiveDateTime",
             Type::DatetimeZone => "chrono::DateTime<chrono::Utc>",
+            Type::Raw(_sql_type, rust_type) => rust_type,
         }
     }
 }
@@ -69,6 +82,7 @@ impl Display for Type {
             Type::Time => "Time",
             Type::Datetime => "Datetime",
             Type::DatetimeZone => "DatetimeZone",
+            Type::Raw(sql_type, _rust) => sql_type,
         };
         f.write_str(t)?;
         Ok(())
@@ -113,6 +127,33 @@ impl FromStr for Type {
     }
 }
 
+impl Display for Visibility {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let v = match self {
+            Visibility::Pub => "pub",
+            Visibility::PubCrate => "pub(crate)",
+            Visibility::PubSuper => "pub(super)",
+            Visibility::Private => "",
+        };
+        f.write_str(v)?;
+        Ok(())
+    }
+}
+
+impl FromStr for Visibility {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let vis = s.trim().to_lowercase();
+        let v = match vis.as_str() {
+            "pub" => Visibility::Pub,
+            "pub(crate)" => Visibility::PubCrate,
+            "pub(super)" => Visibility::PubSuper,
+            _ => return Err(()),
+        };
+        Ok(v)
+    }
+}
+
 impl FromStr for Field {
     type Err = GumboError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -122,6 +163,9 @@ impl FromStr for Field {
         // no type, default to string
         if parts.len() == 1 {
             return Ok(Field {
+                visibility: Visibility::default(),
+                primary_key: parts[0] == "id",
+                welds_ignored: false,
                 name: parts[0].to_snake_case(),
                 ty: Type::String,
                 null: false,
@@ -131,6 +175,9 @@ impl FromStr for Field {
         // parse the type
         if parts.len() == 2 {
             return Ok(Field {
+                visibility: Visibility::default(),
+                primary_key: parts[0] == "id",
+                welds_ignored: false,
                 name: parts[0].to_snake_case(),
                 ty: Type::from_str(parts[1])
                     .map_err(|_| GumboError::InvalidFieldType(s.to_string()))?,
@@ -143,6 +190,9 @@ impl FromStr for Field {
             let tail = parts[2].trim().to_lowercase();
             let null = tail == "null" || tail == "optional" || tail == "option";
             return Ok(Field {
+                visibility: Visibility::default(),
+                primary_key: parts[0] == "id",
+                welds_ignored: false,
                 name: parts[0].to_snake_case(),
                 ty: Type::from_str(parts[1])
                     .map_err(|_| GumboError::InvalidFieldType(s.to_string()))?,
@@ -164,6 +214,14 @@ mod tests {
         let f = Field::from_str("name").unwrap();
         assert_eq!(f.name, "name");
         assert_eq!(f.ty, Type::String);
+        assert!(!f.primary_key);
+    }
+
+    #[test]
+    fn basic_id() {
+        let f = Field::from_str("id:int").unwrap();
+        assert_eq!(f.name, "id");
+        assert!(f.primary_key);
     }
 
     #[test]

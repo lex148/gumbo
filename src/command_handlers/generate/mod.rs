@@ -36,7 +36,7 @@ fn run_inner(cmd: &GenerateCommands) -> Result<()> {
     Ok(())
 }
 
-fn get_root_path() -> crate::errors::Result<PathBuf> {
+pub(crate) fn get_root_path() -> crate::errors::Result<PathBuf> {
     let path = fs::canonicalize(PathBuf::from("./"))
         .or(Err(crate::errors::GumboError::InvalidRootPath))?;
     let mut parent: Option<&Path> = Some(&path);

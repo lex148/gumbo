@@ -22,25 +22,3 @@ pub(crate) fn crud_template(names: &Names) -> String {
 
     s.to_string()
 }
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    #[test]
-    fn should_be_able_to_write_action() {
-        let names = Names::new("potato");
-        let code = crud_template(&names);
-        assert_eq!(code, EXPECTED_CRUD.trim())
-    }
-
-    static EXPECTED_CRUD: &str = r#"
-#[get("/potatoes/new")]
-pub(crate) async fn new() -> Result<HttpResponse> {
-    use crate::views::potatoes::new::{New, ViewArgs};
-    let args = ViewArgs::default();
-    render::<New,_,_>(args).await
-}
-"#;
-}

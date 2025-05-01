@@ -126,13 +126,15 @@ pub(crate) enum DatabaseCommands {
     ListViews,
     /// Prints out the columns and types of a table/view
     Describe { table: String },
-    //  #[clap(name = "model-from-table", alias = "m")]
-    //  /// Create a model from a database table
-    //  ModelFromTable {
-    //      /// list of Tables to import into models
-    //      tables: Vec<String>,
-    //      //  /// Generate models from all tables in the database
-    //      //  #[clap(long, action)]
-    //      //  all-tables: bool,
-    //  },
+
+    #[clap(name = "model-from-table", alias = "m")]
+    /// Create a model from a database table
+    ModelFromTable {
+        /// list of Tables to import into models
+        #[arg(required = true, num_args = 1..)]
+        tables: Vec<String>,
+        //  /// Generate models from all tables in the database
+        //  #[clap(long, action)]
+        //  all-tables: bool,
+    },
 }

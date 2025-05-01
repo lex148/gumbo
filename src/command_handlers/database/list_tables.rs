@@ -1,26 +1,10 @@
-use welds::detect::{DataType, find_tables};
+use welds::detect::{DataType, TableDef, find_all_tables};
 use welds::errors::Result;
 use welds::model_traits::TableIdent;
 
-// Print out a list of tables in the database
-pub(crate) fn run() -> Result<()> {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_time()
-        .enable_io()
-        .build()
-        .unwrap();
-    rt.block_on(async { list_tables_inner().await })
-}
-
-async fn list_tables_inner() -> Result<()> {
-    let pool = welds::connections::connect_from_env().await?;
-    let mut tables = find_tables(&pool).await?;
-    tables.sort_by(|a, b| a.ident().name().cmp(b.ident().name()));
-    tables.sort_by(|a, b| a.ident().schema().cmp(&b.ident().schema()));
+pub(crate) async fn list_tables() -> Result<()> {
+    let tables = fetch_db_tables().await?;
     for table in tables {
-        if table.ident().name() == "_welds_migrations" {
-            continue;
-        }
         if table.ty() == DataType::Table {
             let ident = table.ident();
             match ident.schema() {
@@ -32,21 +16,26 @@ async fn list_tables_inner() -> Result<()> {
     Ok(())
 }
 
-// Print out a list of tables in the database
-pub(crate) fn run_views() -> Result<()> {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_time()
-        .enable_io()
-        .build()
-        .unwrap();
-    rt.block_on(async { list_views_inner().await })
-}
-
-async fn list_views_inner() -> Result<()> {
+pub(crate) async fn fetch_db_tables() -> Result<Vec<TableDef>> {
     let pool = welds::connections::connect_from_env().await?;
-    let mut tables = find_tables(&pool).await?;
+    let mut tables = find_all_tables(&pool).await?;
     tables.sort_by(|a, b| a.ident().name().cmp(b.ident().name()));
     tables.sort_by(|a, b| a.ident().schema().cmp(&b.ident().schema()));
+    let mut cleaned = Vec::default();
+    for table in tables {
+        if table.ident().name() == "_welds_migrations" {
+            continue;
+        }
+        if table.ident().name() == "sqlite_sequence" {
+            continue;
+        }
+        cleaned.push(table);
+    }
+    Ok(cleaned)
+}
+
+pub(crate) async fn list_views() -> Result<()> {
+    let tables = fetch_db_tables().await?;
     for table in tables {
         if table.ident().name() == "_welds_migrations" {
             continue;
@@ -62,16 +51,6 @@ async fn list_views_inner() -> Result<()> {
     Ok(())
 }
 
-// Print out a list of tables in the database
-pub(crate) fn describe(tablename: &str) -> Result<()> {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_time()
-        .enable_io()
-        .build()
-        .unwrap();
-    rt.block_on(async { describe_inner(tablename).await })
-}
-
 use tabled::Tabled;
 #[derive(Tabled)]
 struct ColumnDislay<'c> {
@@ -85,9 +64,9 @@ struct ColumnDislay<'c> {
     pk: bool,
 }
 
-async fn describe_inner(tablename: &str) -> Result<()> {
+pub(crate) async fn describe(tablename: &str) -> Result<()> {
     let pool = welds::connections::connect_from_env().await?;
-    let tables = find_tables(&pool).await?;
+    let tables = find_all_tables(&pool).await?;
     let ident = TableIdent::parse(tablename);
 
     let found = tables

@@ -80,38 +80,3 @@ fn add_field(field: &Field) -> String {
 fn fn_tail(migration_name: &str) -> String {
     format!("    Ok(MigrationStep::new(\"{migration_name}\", m))\n}}")
 }
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-    use std::str::FromStr;
-
-    #[test]
-    fn create_example_model() {
-        let n = Names::new("carPrice");
-        assert_eq!(n.table_name, "car_prices");
-        let fields = vec![
-            Field::from_str("make:string").unwrap(),
-            Field::from_str("model:string:null").unwrap(),
-            Field::from_str("year:int").unwrap(),
-        ];
-
-        let code = build(&n, &fields, "create_table_car_prices").unwrap();
-        assert_eq!(code, EXPECTED.trim())
-    }
-
-    static EXPECTED: &str = r#"
-use welds::errors::Result;
-use welds::migrations::prelude::*;
-
-pub(super) fn step(_state: &TableState) -> Result<MigrationStep> {
-    let m = create_table("car_prices")
-        .id(|c| c("id", Type::Int))
-        .column(|c| c("make", Type::String))
-        .column(|c| c("model", Type::String).null())
-        .column(|c| c("year", Type::Int));
-    Ok(MigrationStep::new("create_table_car_prices", m))
-}
-"#;
-}

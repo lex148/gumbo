@@ -1,56 +1,67 @@
 use crate::cli::DatabaseCommands;
+use crate::errors::Result;
 use welds::Client;
-use welds::errors::Result;
 mod list_tables;
+mod model_from_table;
+use crate::change::write_to_disk;
+use crate::command_handlers::generate::get_root_path;
 
 /// Called to to crate a new gumbo project
 pub fn run(cmd: &DatabaseCommands) {
-    if let Err(err) = run_inner(cmd) {
-        eprintln!("{err}");
-        std::process::exit(1);
-    }
-}
-
-fn run_inner(cmd: &DatabaseCommands) -> Result<()> {
-    match cmd {
-        DatabaseCommands::Rollback {} => welds_rollback()?,
-        DatabaseCommands::TestConnection {} => test_connection()?,
-        DatabaseCommands::ListTables {} => list_tables::run()?,
-        DatabaseCommands::ListViews {} => list_tables::run_views()?,
-        DatabaseCommands::Describe { table } => list_tables::describe(table)?,
-        // DatabaseCommands::ModelFromTable { tables } => {
-        //     println!("models from tables");
-        // }
-    }
-    Ok(())
-}
-
-fn test_connection() -> Result<()> {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_time()
         .enable_io()
         .build()
         .unwrap();
-    rt.block_on(async { test_connection_inner().await })
+    rt.block_on(async {
+        if let Err(err) = run_inner(cmd).await {
+            eprintln!("{err}");
+            std::process::exit(1);
+        }
+    })
 }
 
-async fn test_connection_inner() -> Result<()> {
+async fn run_inner(cmd: &DatabaseCommands) -> Result<()> {
+    match cmd {
+        DatabaseCommands::Rollback => welds_rollback().await?,
+        DatabaseCommands::TestConnection => test_connection().await?,
+        DatabaseCommands::ListTables => list_tables::list_tables().await?,
+        DatabaseCommands::ListViews => list_tables::list_views().await?,
+        DatabaseCommands::Describe { table } => list_tables::describe(table).await?,
+        DatabaseCommands::ModelFromTable { tables } => {
+            // if the table is "--all-tables", update them all
+            let mut tables: Vec<String> = tables.to_vec();
+            if tables.first().map(|s| s.as_str()) == Some("--all-tables") {
+                let tables_def = list_tables::fetch_db_tables().await?;
+                tables = tables_def.iter().map(|d| d.ident().to_string()).collect();
+            }
+
+            let root_path = get_root_path()?;
+            let mut changes = Vec::default();
+            for table in &tables {
+                changes.push(model_from_table::run(table).await?);
+            }
+            for change in changes.as_slice().iter().flatten() {
+                println!("FILE: {:?}", change.file());
+            }
+            for change in changes.as_slice().iter().flatten() {
+                write_to_disk(&root_path, change)?;
+            }
+            crate::command_handlers::run_rustfmt(&root_path);
+            println!("Model Update Completed");
+        }
+    }
+    Ok(())
+}
+
+async fn test_connection() -> Result<()> {
     let pool = welds::connections::connect_from_env().await?;
     pool.execute("SELECT 1", &[]).await?;
     println!("CONNECTED TO DATABASE");
     Ok(())
 }
 
-fn welds_rollback() -> Result<()> {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_time()
-        .enable_io()
-        .build()
-        .unwrap();
-    rt.block_on(async { welds_rollback_inner().await })
-}
-
-async fn welds_rollback_inner() -> Result<()> {
+async fn welds_rollback() -> Result<()> {
     let trans_start = welds::connections::connect_from_env().await?;
     let name = welds::migrations::down_last(trans_start.as_ref()).await?;
     println!("Migration Down Complete: {:?}", name);

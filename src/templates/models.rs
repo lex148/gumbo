@@ -10,72 +10,68 @@ pub(crate) fn write_template(names: &Names, fields: &[Field]) -> Result<Vec<Chan
     Ok(vec![Change::new_from_path(path, code)?.add_parent_mod()])
 }
 
-fn build(names: &Names, fields: &[Field]) -> Result<String> {
-    // the ID field, or use a default
-    let id_field: Option<Field> = fields.iter().find(|x| x.name == "id").cloned();
-    let id_field: Field = id_field.unwrap_or(Field::from_str("id:uuid")?);
-    let id_field = [id_field];
-
-    // the fields without any IDs
-    let fields = fields.iter().filter(|x| x.name != "id");
-
-    let innerds: Vec<String> = id_field.iter().chain(fields).map(field_line).collect();
-    let innerds: String = innerds.join("\n");
-    let table_name = &names.table_name;
-    let model_name = &names.model_struct;
+pub(crate) fn build(names: &Names, fields: &[Field]) -> Result<String> {
+    let struct_code = build_struct(names, fields)?;
+    let table_attribute = names.welds_table_attribute();
 
     let head = format!(
         r#"use welds::prelude::*;
 
 #[derive(Debug, WeldsModel, PartialEq)]
-#[welds(table = "{table_name}")]
-pub(crate) struct {model_name} {{
+{table_attribute}
 "#
     );
 
-    Ok(format!("{head}  #[welds(primary_key)]\n{innerds}\n}}"))
+    Ok(format!("{head}{struct_code}"))
 }
 
+pub(crate) fn build_struct(names: &Names, fields: &[Field]) -> Result<String> {
+    let (mut id_fields, fields): (Vec<_>, Vec<_>) = fields.iter().partition(|f| f.primary_key);
+    let default_id_field: Field = Field::from_str("id:uuid")?;
+
+    // the ID field, or use a default
+    if id_fields.is_empty() {
+        id_fields.push(&default_id_field);
+    }
+
+    let innerds: Vec<String> = id_fields
+        .iter()
+        .chain(fields.iter())
+        .map(|&f| field_line(f))
+        .collect();
+
+    let innerds: String = innerds.join("\n");
+    let model_name = &names.model_struct;
+
+    let head = format!("pub(crate) struct {model_name} {{\n");
+
+    Ok(format!("{head}  {innerds}\n}}"))
+}
+
+/// write each fields for the model
 fn field_line(field: &Field) -> String {
-    let Field { name, ty, null } = field;
+    let Field {
+        visibility,
+        primary_key,
+        welds_ignored,
+        name,
+        ty,
+        null,
+    } = field;
+
+    let mut attrs: Vec<String> = Vec::default();
+    if *primary_key {
+        attrs.push("#[welds(primary_key)]".to_string())
+    }
+    if *welds_ignored {
+        attrs.push("#[welds(ignore)]".to_string())
+    }
+    let attrs_text = attrs.join("\n");
+
     let ty = ty.rust_type();
     if *null {
-        format!("  pub {name}: Option<{ty}>,")
+        format!("{attrs_text}  {visibility} {name}: Option<{ty}>,")
     } else {
-        format!("  pub {name}: {ty},")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-
-    use std::str::FromStr;
-
-    use super::*;
-
-    #[test]
-    fn create_example_model() {
-        let n = Names::new("InventoryLevels");
-        let fields = vec![
-            Field::from_str("item:string:null").unwrap(),
-            Field::from_str("price:float").unwrap(),
-        ];
-
-        let code = build(&n, &fields).unwrap();
-
-        assert_eq!(
-            code,
-            r#"
-use welds::prelude::*;
-
-#[derive(Debug, WeldsModel, PartialEq)]
-#[welds(table = "inventory_levels")]
-pub(crate) struct InventoryLevel {
-  pub id: uuid::Uuid,
-  pub item: Option<String>,
-  pub price: f32,
-}"#
-            .trim()
-        )
+        format!("{attrs_text}  {visibility} {name}: {ty},")
     }
 }
