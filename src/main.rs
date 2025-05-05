@@ -1,6 +1,4 @@
-use clap::Parser;
-
-use crate::cli::RootCommand;
+use clap_complete::CompleteEnv;
 
 pub(crate) mod action;
 pub(crate) mod change;
@@ -9,6 +7,7 @@ pub(crate) mod command_handlers;
 pub(crate) mod errors;
 pub(crate) mod fields;
 pub(crate) mod names;
+mod setup_shell;
 pub(crate) mod templates;
 
 fn main() {
@@ -20,13 +19,20 @@ fn main() {
         }
     }
 
-    let arg = cli::Cli::parse();
+    if std::env::var("COMPLETE").is_ok() {
+        cli::flag_is_autocomplete();
+        CompleteEnv::with_factory(cli::build_cli).complete()
+    }
+
+    let arg = cli::build_cli().get_matches();
 
     // send the command to its command handler
-    match &arg.command {
-        RootCommand::Init { path, welds_only } => command_handlers::init::run(path, *welds_only),
-        RootCommand::Generate { sub_cmd } => command_handlers::generate::run(sub_cmd),
-        RootCommand::Convert { sub_cmd } => command_handlers::convert::run(sub_cmd),
-        RootCommand::Database { sub_cmd } => command_handlers::database::run(sub_cmd),
+    match &arg.subcommand() {
+        Some(("init", sub_m)) => command_handlers::init::run(sub_m),
+        Some(("generate", sub_m)) => command_handlers::generate::run(sub_m),
+        Some(("convert", sub_cmd)) => command_handlers::convert::run(sub_cmd),
+        Some(("db", sub_m)) => command_handlers::database::run(sub_m),
+        Some(("setup-shell", _)) => setup_shell::setup_completions().unwrap(),
+        _ => unreachable!(),
     }
 }

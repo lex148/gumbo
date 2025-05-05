@@ -65,7 +65,7 @@ fn into_fields(def: &TableDef, syntax: welds::Syntax) -> Vec<Field> {
             let sql_type = c.ty().to_string();
 
             let rust_type = recommended_rust_type(syntax, &sql_type)
-                .map(|p| p.rust_type())
+                .map(|p| p.full_rust_type())
                 .unwrap_or_else(|| sql_type.clone());
 
             Field {

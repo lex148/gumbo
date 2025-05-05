@@ -14,23 +14,25 @@ keywords = ["web", "cli", "server", "generator", "tool"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-base64 = "0.22.1"
+base64 = "0.22"
 chrono = "0.4"
-clap = { version = "4.5", features = ["derive"] }
+clap = { version = "4.5", features = ["derive", "string"] }
 codegen = "0.2"
-cruet = "0.14"
-pluralizer = "0.4"
-rand = "0.8.5"
+cruet = "0.15"
+pluralizer = "0.5"
+rand = "0.9"
 thiserror = "2.0"
-welds = { version = '0.4', features=["postgres","mysql","mssql","sqlite","migrations"] }
-welds-connections = { version = '^0.4.13', features=["full"] }
+welds = { version = '^0.4.15', features=["postgres","mysql","mssql","sqlite","migrations"] }
+welds-connections = { version = '^0.4.15', features=["full"] }
 sqlx = { version = "0.8", features = [ "runtime-tokio-rustls" ] }
 tokio = { version = "1", features = ["rt"] }
-tabled = "0.18.0"
-dotenvy = "0.15.7"
-tree-sitter = "0.25.3"
-tree-sitter-rust = "0.24.0"
-tokio-macros = "2.5.0"
+tabled = "0.19"
+dotenvy = "0.15"
+tree-sitter = "0.25"
+tree-sitter-rust = "0.24"
+tokio-macros = "2.5"
+clap_complete = { version = "4.5.50", features = ["unstable-dynamic"] }
+dirs = "6.0.0"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

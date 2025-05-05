@@ -1,4 +1,5 @@
-use crate::cli::ConvertCommands;
+//use crate::cli::ConvertCommands;
+use clap::ArgMatches;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -9,17 +10,24 @@ enum GenerateError {
 }
 
 /// Called to to crate a new gumbo project
-pub fn run(cmd: &ConvertCommands) {
-    if let Err(err) = run_inner(cmd) {
+pub fn run(args: &ArgMatches) {
+    if let Err(err) = run_inner(args) {
         eprintln!("{err}");
         std::process::exit(1);
     }
 }
 
-fn run_inner(cmd: &ConvertCommands) -> Result<(), GenerateError> {
-    match cmd {
-        ConvertCommands::Mod2Dir { path } => mod2dir(path)?,
-        ConvertCommands::Dir2Mod { path } => dir2mod(path)?,
+fn run_inner(args: &ArgMatches) -> Result<(), GenerateError> {
+    match args.subcommand() {
+        Some(("mod2dir", sub_m)) => {
+            let path = sub_m.get_one::<PathBuf>("path").unwrap();
+            mod2dir(path)?;
+        }
+        Some(("dir2mod", sub_m)) => {
+            let path = sub_m.get_one::<PathBuf>("path").unwrap();
+            dir2mod(path)?;
+        }
+        _ => unreachable!(),
     }
     Ok(())
 }

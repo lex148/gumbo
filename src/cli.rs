@@ -1,140 +1,266 @@
-use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use clap::builder::PathBufValueParser;
+use clap::{Arg, ArgAction, Command};
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub(crate) struct Cli {
-    #[command(subcommand)]
-    pub command: RootCommand,
+pub(crate) fn build_cli() -> Command {
+    Command::new("gumbo")
+        .version(env!("CARGO_PKG_VERSION"))
+        .propagate_version(true)
+        .arg_required_else_help(true)
+        .subcommand(init_subcommand())
+        .subcommand(generate_subcommand())
+        .subcommand(db_subcommand())
+        .subcommand(convert_subcommand())
+        .subcommand(Command::new("setup-shell").about("add gumbo auto-completion to your shell"))
 }
 
-#[derive(Subcommand, Debug)]
-pub(crate) enum RootCommand {
-    /// Create a new project all setup for gumbo
-    Init {
-        /// When set, the project that is initialized is only setup for welds, not a full actix website
-        #[clap(long, action)]
-        welds_only: bool,
-        /// Path to where to initialize the new project
-        path: PathBuf,
-    },
-
-    /// Used to generate code
-    #[clap(name = "generate", alias = "g")]
-    Generate {
-        #[clap(subcommand)]
-        sub_cmd: GenerateCommands,
-    },
-
-    /// Helpers utils for weldsorm
-    #[clap(name = "db")]
-    Database {
-        #[clap(subcommand)]
-        sub_cmd: DatabaseCommands,
-    },
-
-    /// Automatically convert you code
-    #[clap(name = "convert", alias = "c")]
-    Convert {
-        #[clap(subcommand)]
-        sub_cmd: ConvertCommands,
-    },
+fn init_subcommand() -> Command {
+    Command::new("init")
+        .about("Create a new project all setup for gumbo")
+        .arg(
+            Arg::new("path")
+                .help("Path to where to initialize the new project")
+                .required(true)
+                .value_parser(PathBufValueParser::new()),
+        )
+        .arg(
+            Arg::new("welds_only")
+                .long("welds-only")
+                .help("Only setup for welds (no full actix website)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("mssql")
+                .long("mssql")
+                .help("Enable support for mssql")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("mysql")
+                .long("mysql")
+                .help("Enable support for mysql")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("postgres")
+                .long("postgres")
+                .help("Enable support for postgres")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("sqlite")
+                .long("sqlite")
+                .help("Enable support for sqlite")
+                .action(ArgAction::SetTrue),
+        )
 }
 
-#[derive(Subcommand, Debug)]
-pub(crate) enum GenerateCommands {
-    #[clap(name = "scaffold", alias = "s")]
-
-    /// Scaffold out a full model/view/controller
-    Scaffold {
-        /// Name of the resource to scaffold. Example: `gumbo generate scaffold car make:string model:string year:int` would
-        /// create a model/view/controller/migration for cars. Everything all wired up for the
-        /// three fields
-        name: String,
-        /// List of fields for model. Example: name:string description:text:option
-        ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
-        fields: Vec<String>,
-    },
-
-    #[clap(name = "model", alias = "m")]
-    /// Generate a model
-    Model {
-        /// Name of the Model to generate. Example: `gumbo generate model car make:string model:string year:int` would
-        /// create a model/migration for cars. Everything all wired up for the three fields
-        name: String,
-        /// List of fields for model. Example: name:string description:text:option
-        ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
-        fields: Vec<String>,
-        /// Disable migration generate
-        #[clap(long, action)]
-        no_migration: bool,
-    },
-
-    #[clap(name = "migration", alias = "db")]
-    /// Generate a migration, no model attached
-    Migration {
-        /// Name of the Migration to generate. Example: `gumbo generate migration car make:string model:string year:int` would
-        /// create a migration for cars.
-        name: String,
-        /// List of fields for table. Example: name:string description:text:option
-        ///    examples of common types: (bool, int_small, int, int_big, string, text, float, big_float, binary, uuid)
-        fields: Vec<String>,
-    },
-
-    #[clap(name = "controller", alias = "c")]
-    /// Generate a controller and its actions
-    Controller {
-        /// Name of the controller. "Cars" would generate the cars_controller
-        name: String,
-        /// List of actions the controller will respond to (index show new create edit update delete)
-        actions: Vec<String>,
-        /// Disable the creation of views
-        #[clap(long, action)]
-        no_views: bool,
-    },
-
-    #[clap(name = "env")]
-    /// Generate a .env file.
-    /// Setups an .env file will all the setting needed to boot up your gumbo app.
-    Env {},
+fn generate_subcommand() -> Command {
+    Command::new("generate")
+        .about("Used to generate code")
+        .alias("g")
+        .subcommand_required(true)
+        .subcommand(scaffold_subcommand())
+        .subcommand(model_subcommand())
+        .subcommand(migration_subcommand())
+        .subcommand(controller_subcommand())
+        .subcommand(env_subcommand())
 }
 
-#[derive(Subcommand, Debug)]
-pub(crate) enum ConvertCommands {
-    #[clap(name = "mod2dir")]
-    /// Convert a code file "bla.rs" into a folder/mod bla/mod.rs
-    Mod2Dir { path: PathBuf },
-
-    #[clap(name = "dir2mod")]
-    /// Convert a code folder/mod.rs "bla/mod.rs" into a sinple file bla.rs
-    Dir2Mod { path: PathBuf },
+fn scaffold_subcommand() -> Command {
+    Command::new("scaffold")
+        .about("Scaffold out a full model/view/controller")
+        .alias("s")
+        .arg(
+            Arg::new("name")
+                .help("Name of the resource to scaffold")
+                .required(true),
+        )
+        .arg(
+            Arg::new("fields")
+                .help("List of fields for model (e.g. name:string description:text:option)")
+                .required(true)
+                .num_args(1..),
+        )
 }
 
-#[derive(Subcommand, Debug)]
-pub(crate) enum DatabaseCommands {
-    #[clap(name = "rollback")]
-    /// Rollback the last welds migration (migrate down)
-    Rollback,
-    #[clap(name = "test-connection")]
-    /// Checks that gumbo and connect to your database.
-    /// Gumbo looks for a connection string in the ENV DATABASE_URL
-    TestConnection,
-    /// Prints out a list of tables in the database
-    ListTables,
-    /// Prints out a list of views in the database
-    ListViews,
-    /// Prints out the columns and types of a table/view
-    Describe { table: String },
+fn model_subcommand() -> Command {
+    Command::new("model")
+        .about("Generate a model")
+        .alias("m")
+        .arg(
+            Arg::new("name")
+                .help("Name of the Model to generate")
+                .required(true),
+        )
+        .arg(
+            Arg::new("fields")
+                .help("List of fields for model")
+                .required(true)
+                .num_args(1..),
+        )
+        .arg(
+            Arg::new("no_migration")
+                .long("no-migration")
+                .help("Disable migration generation")
+                .action(ArgAction::SetTrue),
+        )
+}
 
-    #[clap(name = "model-from-table", alias = "m")]
-    /// Create a model from a database table
-    ModelFromTable {
-        /// list of Tables to import into models
-        #[arg(required = true, num_args = 1..)]
-        tables: Vec<String>,
-        //  /// Generate models from all tables in the database
-        //  #[clap(long, action)]
-        //  all-tables: bool,
-    },
+fn migration_subcommand() -> Command {
+    Command::new("migration")
+        .about("Generate a migration, no model attached")
+        .alias("db")
+        .arg(
+            Arg::new("name")
+                .help("Name of the Migration to generate")
+                .required(true),
+        )
+        .arg(
+            Arg::new("fields")
+                .help("List of fields for table")
+                .required(true)
+                .num_args(1..),
+        )
+}
+
+fn controller_subcommand() -> Command {
+    Command::new("controller")
+        .about("Generate a controller and its actions")
+        .alias("c")
+        .arg(
+            Arg::new("name")
+                .help("Name of the controller (e.g. Cars → cars_controller)")
+                .required(true),
+        )
+        .arg(
+            Arg::new("actions")
+                .help("List of actions (index, show, new, create, edit, update, delete)")
+                .required(true)
+                .num_args(1..),
+        )
+        .arg(
+            Arg::new("no_views")
+                .long("no-views")
+                .help("Disable the creation of views")
+                .action(ArgAction::SetTrue),
+        )
+}
+
+fn env_subcommand() -> Command {
+    Command::new("env").about("Generate a .env file with all settings needed for your gumbo app")
+}
+
+fn db_subcommand() -> Command {
+    Command::new("db")
+        .about("Helper utils for weldsorm")
+        .subcommand_required(true)
+        .subcommand(
+            Command::new("rollback").about("Rollback the last welds migration (migrate down)"),
+        )
+        .subcommand(
+            Command::new("test-connection").about("Check database connectivity via DATABASE_URL"),
+        )
+        .subcommand(Command::new("list-tables").about("List tables in the database"))
+        .subcommand(Command::new("list-views").about("List views in the database"))
+        .subcommand(describe_subcommand())
+        .subcommand(model_from_table_subcommand())
+}
+
+fn describe_subcommand() -> Command {
+    let mut cmd = Command::new("describe");
+
+    // inject table "command" really just tables into the auto-complete list
+    if is_autocomplete() && std::env::var("DATABASE_URL").is_ok() {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .enable_io()
+            .build()
+            .unwrap();
+        let tables = rt.block_on(async {
+            crate::command_handlers::database::list_tables::fetch_db_tables()
+                .await
+                .unwrap_or_default()
+        });
+        for name in tables.iter().map(|t| t.ident().to_string()) {
+            cmd = cmd.subcommand(Command::new(name.clone()));
+        }
+    }
+
+    cmd.about("Print columns and types of a table/view").arg(
+        Arg::new("table")
+            .help("Name of the table or view")
+            .required(true),
+    )
+}
+
+static mut FLAG: bool = false;
+pub(crate) fn flag_is_autocomplete() {
+    unsafe {
+        FLAG = true;
+    }
+}
+
+fn is_autocomplete() -> bool {
+    unsafe { FLAG }
+}
+
+fn model_from_table_subcommand() -> Command {
+    let mut cmd = Command::new("model-from-table")
+        .about("Create a model from one or more database tables")
+        .alias("m");
+
+    // inject table "command" really just tables into the auto-complete list
+    if is_autocomplete() && std::env::var("DATABASE_URL").is_ok() {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_time()
+            .enable_io()
+            .build()
+            .unwrap();
+        let tables = rt.block_on(async {
+            crate::command_handlers::database::list_tables::fetch_db_tables()
+                .await
+                .unwrap_or_default()
+        });
+        for name in tables.iter().map(|t| t.ident().to_string()) {
+            cmd = cmd.subcommand(Command::new(name.clone()));
+        }
+    }
+
+    cmd.arg(
+        Arg::new("tables")
+            .help("List of tables to import into models")
+            .required(true)
+            .num_args(1..),
+    )
+}
+
+fn convert_subcommand() -> Command {
+    Command::new("convert")
+        .about("Automatically convert your code")
+        .alias("c")
+        .subcommand_required(true)
+        .subcommand(mod2dir_subcommand())
+        .subcommand(dir2mod_subcommand())
+}
+
+fn mod2dir_subcommand() -> Command {
+    Command::new("mod2dir")
+        .about(r#"Convert "bla.rs" into "bla/mod.rs" folder structure"#)
+        .arg(
+            Arg::new("path")
+                .help("Path to the file or directory")
+                .required(true)
+                .value_parser(PathBufValueParser::new()),
+        )
+}
+
+fn dir2mod_subcommand() -> Command {
+    Command::new("dir2mod")
+        .about(r#"Convert "bla/mod.rs" into "bla.rs" file"#)
+        .arg(
+            Arg::new("path")
+                .help("Path to the folder or mod.rs")
+                .required(true)
+                .value_parser(PathBufValueParser::new()),
+        )
 }

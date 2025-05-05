@@ -16,23 +16,43 @@ pub(crate) async fn list_tables() -> Result<()> {
     Ok(())
 }
 
+/// Fetch a list of table from the database.
+/// common system level tables are ignored.
 pub(crate) async fn fetch_db_tables() -> Result<Vec<TableDef>> {
     let pool = welds::connections::connect_from_env().await?;
     let mut tables = find_all_tables(&pool).await?;
+
+    let ignore: Vec<TableIdent> = IGNORE_TABLES.iter().map(|t| TableIdent::parse(t)).collect();
+
     tables.sort_by(|a, b| a.ident().name().cmp(b.ident().name()));
     tables.sort_by(|a, b| a.ident().schema().cmp(&b.ident().schema()));
-    let mut cleaned = Vec::default();
-    for table in tables {
-        if table.ident().name() == "_welds_migrations" {
-            continue;
-        }
-        if table.ident().name() == "sqlite_sequence" {
-            continue;
-        }
-        cleaned.push(table);
-    }
-    Ok(cleaned)
+
+    Ok(tables
+        .iter()
+        .filter(|t| !ignore.contains(t.ident()))
+        .cloned()
+        .collect())
 }
+
+/// list of tables that will be ignored by gumbo
+const IGNORE_TABLES: &[&str] = &[
+    "public._welds_migrations",
+    "_welds_migrations",
+    "public.ar_internal_metadata",
+    "metric_helpers.index_bloat",
+    "metric_helpers.table_bloat",
+    "metric_helpers.nearly_exhausted_sequences",
+    "metric_helpers.pg_stat_statements",
+    "public.pg_stat_kcaches",
+    "public.pg_stat_kcache_details",
+    "public.pg_stat_statements",
+    "public.pg_stat_statements_infos",
+    "public.pg_stat_kcache",
+    "public.pg_stat_kcache_detail",
+    "public.pg_stat_statements_info",
+    "public.schema_migrations",
+    "sqlite_sequence",
+];
 
 pub(crate) async fn list_views() -> Result<()> {
     let tables = fetch_db_tables().await?;

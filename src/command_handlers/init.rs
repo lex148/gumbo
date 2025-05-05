@@ -4,30 +4,69 @@ use crate::templates::{
     asset_controller, auth_controller, build, cargo_config, docker, errors, greetings_controller,
     inputcss, main, migrations, views_mod,
 };
+use clap::ArgMatches;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 /// Called to to crate a new gumbo project
-pub fn run(path: &Path, welds_only: bool) {
-    if welds_only {
-        if let Err(err) = run_inner_welds_only(path) {
+pub fn run(args: &ArgMatches) {
+    let path = args.get_one::<PathBuf>("path").unwrap();
+    let welds_only = args.get_one::<bool>("welds_only").unwrap();
+
+    let mut backends = std::collections::HashSet::new();
+    let mssql = args.get_one::<bool>("mssql").unwrap();
+    let mysql = args.get_one::<bool>("mysql").unwrap();
+    let postgres = args.get_one::<bool>("postgres").unwrap();
+    let sqlite = args.get_one::<bool>("sqlite").unwrap();
+
+    if *mysql {
+        backends.insert("mysql");
+    }
+    if *mssql {
+        backends.insert("mssql");
+    }
+    if *postgres {
+        backends.insert("postgres");
+    }
+    if *sqlite {
+        backends.insert("sqlite");
+    }
+
+    //pub fn run(path: &Path, welds_only: bool, backends: HashSet<&'static str>) {
+    if *welds_only {
+        if let Err(err) = run_inner_welds_only(path, backends) {
             eprintln!("{err}");
             std::process::exit(1);
         }
-    } else if let Err(err) = run_inner(path) {
+    } else if let Err(err) = run_inner(path, backends) {
         eprintln!("{err}");
         std::process::exit(1);
     }
 }
 
-fn run_inner_welds_only(rootpath: &Path) -> Result<()> {
+fn run_inner_welds_only(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()> {
     cargo_init(rootpath, None)?;
 
-    add_dependencies(rootpath, &["add", "welds", "--features=sqlite,migrations"])?;
+    add_dependencies(rootpath, &["add", "welds", "--features=migrations"])?;
+    backends.extend(env_backends());
+    if backends.is_empty() {
+        backends.insert("sqlite");
+    }
+    for b in backends.iter() {
+        let features = format!("--features={b}");
+        add_dependencies(rootpath, &["add", "welds", &features])?;
+    }
+
     add_dependencies(
         rootpath,
-        &["add", "sqlx", "--features=runtime-tokio,tls-rustls,uuid"],
+        &[
+            "add",
+            "sqlx",
+            "--features=runtime-tokio,tls-rustls,uuid,chrono",
+        ],
     )?;
+    add_dependencies(rootpath, &["add", "chrono"])?;
     add_dependencies(rootpath, &["add", "log"])?;
     add_dependencies(rootpath, &["add", "pretty_env_logger"])?;
     add_dependencies(
@@ -37,7 +76,7 @@ fn run_inner_welds_only(rootpath: &Path) -> Result<()> {
     add_dependencies(rootpath, &["add", "uuid", "--features=v4,serde"])?;
     add_dependencies(rootpath, &["add", "dotenvy"])?;
 
-    let changes = [
+    let mut changes = vec![
         //errors::write_template()?,
         vec![
             Change::new(
@@ -46,7 +85,6 @@ fn run_inner_welds_only(rootpath: &Path) -> Result<()> {
             )?
             .append(),
         ],
-        vec![Change::new("./dev.sqlite", "")?.append()],
         vec![Change::new("./src/models/mod.rs", "")?.append()],
         migrations::init::write_template()?,
         main::write_template_welds_only()?,
@@ -54,11 +92,15 @@ fn run_inner_welds_only(rootpath: &Path) -> Result<()> {
         vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
     ];
 
-    for change in changes.as_ref().iter().flatten() {
+    if backends.contains(&"sqlite") {
+        changes.push(vec![Change::new("./dev.sqlite", "")?.append()]);
+    }
+
+    for change in changes.iter().flatten() {
         println!("CREATING: {:?}", change.file());
     }
 
-    for change in changes.as_ref().iter().flatten() {
+    for change in changes.iter().flatten() {
         write_to_disk(rootpath, change)?;
     }
 
@@ -72,14 +114,28 @@ fn run_inner_welds_only(rootpath: &Path) -> Result<()> {
     Ok(())
 }
 
-fn run_inner(rootpath: &Path) -> Result<()> {
+fn run_inner(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()> {
     cargo_init(rootpath, Some("server"))?;
 
-    add_dependencies(rootpath, &["add", "welds", "--features=sqlite,migrations"])?;
+    add_dependencies(rootpath, &["add", "welds", "--features=migrations"])?;
+    backends.extend(env_backends());
+    if backends.is_empty() {
+        backends.insert("sqlite");
+    }
+    for b in &backends {
+        let features = format!("--features={b}");
+        add_dependencies(rootpath, &["add", "welds", &features])?;
+    }
+
     add_dependencies(
         rootpath,
-        &["add", "sqlx", "--features=runtime-tokio,tls-rustls,uuid"],
+        &[
+            "add",
+            "sqlx",
+            "--features=runtime-tokio,tls-rustls,uuid,chrono",
+        ],
     )?;
+    add_dependencies(rootpath, &["add", "chrono"])?;
     add_dependencies(rootpath, &["add", "thiserror"])?;
     add_dependencies(rootpath, &["add", "actix-web"])?;
     add_dependencies(rootpath, &["add", "actix-files"])?;
@@ -111,7 +167,7 @@ fn run_inner(rootpath: &Path) -> Result<()> {
 
     let logo = include_bytes!("../templates/gumbo.webp");
 
-    let changes = [
+    let mut changes = vec![
         build::write_template()?,
         inputcss::write_template()?,
         asset_controller::write_template()?,
@@ -119,7 +175,6 @@ fn run_inner(rootpath: &Path) -> Result<()> {
         greetings_controller::write_template()?,
         views_mod::write_template(&name)?,
         errors::write_template()?,
-        vec![Change::new("./dev.sqlite", "")?.append()],
         vec![Change::new("./src/models/mod.rs", "")?.append()],
         vec![Change::new("./src/assets/.gitkeep", "")?.append()],
         vec![Change::new("./src/assets/js/.gitkeep", "")?.append()],
@@ -132,11 +187,15 @@ fn run_inner(rootpath: &Path) -> Result<()> {
         vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
     ];
 
-    for change in changes.as_ref().iter().flatten() {
+    if backends.contains(&"sqlite") {
+        changes.push(vec![Change::new("./dev.sqlite", "")?.append()]);
+    }
+
+    for change in changes.iter().flatten() {
         println!("CREATING: {:?}", change.file());
     }
 
-    for change in changes.as_ref().iter().flatten() {
+    for change in changes.iter().flatten() {
         write_to_disk(rootpath, change)?;
     }
 
@@ -193,6 +252,25 @@ fn cargo_init(path: &Path, name: Option<&str>) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub(crate) fn env_backends() -> HashSet<&'static str> {
+    let mut set = std::collections::HashSet::new();
+    let url = std::env::var("DATABASE_URL").ok().unwrap_or_default();
+
+    if url.starts_with("postgresql:") {
+        set.insert("postgres");
+    }
+    if url.starts_with("postgres:") {
+        set.insert("postgres");
+    }
+    if url.starts_with("mysql:") {
+        set.insert("mysql");
+    }
+    if url.starts_with("sqlite:") {
+        set.insert("sqlite");
+    }
+    set
 }
 
 /// runs cargo into to crate the project

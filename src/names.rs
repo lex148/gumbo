@@ -25,11 +25,7 @@ impl Names {
         let s = pluralizer::pluralize(tablename.trim(), 1, false).to_snake_case();
         let class = s.to_class_case();
 
-        let model_path = match &schema_name {
-            Some(schemaname) => PathBuf::from(format!("./src/models/{schemaname}/{s}/mod.rs")),
-            None => PathBuf::from(format!("./src/models/{s}/mod.rs")),
-        };
-
+        let model_path = PathBuf::from(format!("./src/models/{s}/mod.rs"));
         let controller_path = PathBuf::from(format!("./src/controllers/{p}_controller/mod.rs"));
 
         Names {
@@ -54,11 +50,6 @@ impl Names {
             }
             None => format!("#[welds(table = \"{table_name}\")]"),
         }
-    }
-
-    /// returns a welds attribute to use to link a model to a table
-    pub(crate) fn table_ident(&self) -> TableIdent {
-        TableIdent::new(self.table_name.to_string(), self.schema_name.clone())
     }
 }
 
