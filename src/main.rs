@@ -24,15 +24,16 @@ fn main() {
         CompleteEnv::with_factory(cli::build_cli).complete()
     }
 
-    let arg = cli::build_cli().get_matches();
+    // make sure the shell is setup. Ignore any failures
+    let _ = setup_shell::setup_completions();
 
     // send the command to its command handler
+    let arg = cli::build_cli().get_matches();
     match &arg.subcommand() {
         Some(("init", sub_m)) => command_handlers::init::run(sub_m),
         Some(("generate", sub_m)) => command_handlers::generate::run(sub_m),
         Some(("convert", sub_cmd)) => command_handlers::convert::run(sub_cmd),
         Some(("db", sub_m)) => command_handlers::database::run(sub_m),
-        Some(("setup-shell", _)) => setup_shell::setup_completions().unwrap(),
         _ => unreachable!(),
     }
 }

@@ -10,7 +10,6 @@ pub(crate) fn build_cli() -> Command {
         .subcommand(generate_subcommand())
         .subcommand(db_subcommand())
         .subcommand(convert_subcommand())
-        .subcommand(Command::new("setup-shell").about("add gumbo auto-completion to your shell"))
 }
 
 fn init_subcommand() -> Command {
