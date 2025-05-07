@@ -97,10 +97,7 @@ mod tests {
     #[test]
     fn model_path_with_schema() {
         let n = Names::new("car.Price");
-        assert_eq!(
-            n.model_path.to_str().unwrap(),
-            "./src/models/car/price/mod.rs"
-        );
+        assert_eq!(n.model_path.to_str().unwrap(), "./src/models/price/mod.rs");
     }
 
     #[test]
