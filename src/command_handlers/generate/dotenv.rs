@@ -6,7 +6,7 @@ use base64::{Engine, engine::general_purpose::STANDARD};
 pub(crate) fn generate() -> Result<()> {
     let rootpath = get_root_path().unwrap();
 
-    let changes: Vec<Change> = write_template().expect("unable to write .env file");
+    let changes: Vec<Change> = write_template(false).expect("unable to write .env file");
 
     for change in &changes {
         write_to_disk(&rootpath, change)?;
@@ -26,7 +26,7 @@ fn rand_auth_secret() -> String {
     STANDARD.encode(bytes)
 }
 
-pub(crate) fn write_template() -> Result<Vec<Change>> {
+pub(crate) fn write_template(is_sqlite: bool) -> Result<Vec<Change>> {
     let auth_secret = rand_auth_secret();
     let mut lines = vec![
         "# If you want to login with google. Add your oauth2 id/secret here.".to_owned(),
@@ -38,15 +38,19 @@ pub(crate) fn write_template() -> Result<Vec<Change>> {
     ];
     if let Ok(db_env) = std::env::var("DATABASE_URL") {
         lines.push(format!("DATABASE_URL={db_env}"));
+    } else if is_sqlite {
+        lines.push("DATABASE_URL=sqlite://./dev.sqlite".to_owned());
     }
     let text = lines.join("\n");
     Ok(vec![Change::new("./.env", text)?])
 }
 
-pub(crate) fn write_template_lite() -> Result<Vec<Change>> {
+pub(crate) fn write_template_lite(is_sqlite: bool) -> Result<Vec<Change>> {
     let mut lines = vec!["RUST_LOG=info".to_owned()];
     if let Ok(db_env) = std::env::var("DATABASE_URL") {
         lines.push(format!("DATABASE_URL={db_env}"));
+    } else if is_sqlite {
+        lines.push("DATABASE_URL=sqlite://./dev.sqlite".to_owned());
     }
     let text = lines.join("\n");
     Ok(vec![Change::new("./.env", text)?])

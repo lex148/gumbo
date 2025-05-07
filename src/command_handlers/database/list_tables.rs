@@ -22,7 +22,11 @@ pub(crate) async fn fetch_db_tables() -> Result<Vec<TableDef>> {
     let pool = welds::connections::connect_from_env().await?;
     let mut tables = find_all_tables(&pool).await?;
 
-    let ignore: Vec<TableIdent> = IGNORE_TABLES.iter().map(|t| TableIdent::parse(t)).collect();
+    let ignore: Vec<TableIdent> = IGNORE_TABLES
+        .iter()
+        .map(|t| TableIdent::parse(t))
+        .map(|t| include_default_schema(&t, pool.syntax()))
+        .collect();
 
     tables.sort_by(|a, b| a.ident().name().cmp(b.ident().name()));
     tables.sort_by(|a, b| a.ident().schema().cmp(&b.ident().schema()));
@@ -71,7 +75,16 @@ pub(crate) async fn list_views() -> Result<()> {
     Ok(())
 }
 
+fn include_default_schema(ident: &TableIdent, syntax: welds::Syntax) -> TableIdent {
+    if ident.schema().is_some() {
+        return ident.clone();
+    }
+    let schemaname = TableIdent::default_namespace(syntax);
+    TableIdent::new(ident.name(), schemaname)
+}
+
 use tabled::Tabled;
+use welds::Client;
 #[derive(Tabled)]
 struct ColumnDislay<'c> {
     #[tabled(rename = "Name")]
@@ -87,7 +100,7 @@ struct ColumnDislay<'c> {
 pub(crate) async fn describe(tablename: &str) -> Result<()> {
     let pool = welds::connections::connect_from_env().await?;
     let tables = find_all_tables(&pool).await?;
-    let ident = TableIdent::parse(tablename);
+    let ident = include_default_schema(&TableIdent::parse(tablename), pool.syntax());
 
     let found = tables
         .iter()

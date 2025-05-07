@@ -32,7 +32,7 @@ fn main() {
     match &arg.subcommand() {
         Some(("init", sub_m)) => command_handlers::init::run(sub_m),
         Some(("generate", sub_m)) => command_handlers::generate::run(sub_m),
-        Some(("convert", sub_cmd)) => command_handlers::convert::run(sub_cmd),
+        Some(("convert", sub_m)) => command_handlers::convert::run(sub_m),
         Some(("db", sub_m)) => command_handlers::database::run(sub_m),
         _ => unreachable!(),
     }

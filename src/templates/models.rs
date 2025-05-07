@@ -26,7 +26,8 @@ pub(crate) fn build(names: &Names, fields: &[Field]) -> Result<String> {
 }
 
 pub(crate) fn build_struct(names: &Names, fields: &[Field]) -> Result<String> {
-    let (mut id_fields, fields): (Vec<_>, Vec<_>) = fields.iter().partition(|f| f.primary_key);
+    let (mut id_fields, fields): (Vec<_>, Vec<_>) =
+        fields.iter().partition(|f| f.primary_key || f.name == "id");
     let default_id_field: Field = Field::from_str("id:uuid")?;
 
     // the ID field, or use a default
@@ -68,10 +69,34 @@ fn field_line(field: &Field) -> String {
     }
     let attrs_text = attrs.join("\n");
 
+    let mut name: String = name.to_string();
+    if is_keyword(&name) {
+        name = format!("r#{name}");
+    }
+
     let ty = ty.rust_type();
     if *null {
         format!("{attrs_text}  {visibility} {name}: Option<{ty}>,")
     } else {
         format!("{attrs_text}  {visibility} {name}: {ty},")
     }
+}
+
+/// return true if the str is a rust keyword
+fn is_keyword(ident: &str) -> bool {
+    matches!(
+        ident,
+        // Strict Rust keywords
+        "as" | "async" | "await" | "break" | "const" | "continue" |
+        "crate" | "dyn" | "else" | "enum" | "extern" | "false" |
+        "fn" | "for" | "if" | "impl" | "in" | "let" | "loop" |
+        "match" | "mod" | "move" | "mut" | "pub" | "ref" |
+        "return" | "self" | "Self" | "static" | "struct" | "super" |
+        "trait" | "true" | "type" | "union" | "unsafe" | "use" |
+        "where" | "while" |
+        // Reserved / future keywords
+        "abstract" | "become" | "box" | "do" | "final" |
+        "macro" | "override" | "priv" | "try" | "typeof" |
+        "unsized" | "virtual" | "yield"
+    )
 }

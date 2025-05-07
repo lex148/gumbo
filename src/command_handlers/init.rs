@@ -88,7 +88,9 @@ fn run_inner_welds_only(rootpath: &Path, mut backends: HashSet<&'static str>) ->
         vec![Change::new("./src/models/mod.rs", "")?.append()],
         migrations::init::write_template()?,
         main::write_template_welds_only()?,
-        crate::command_handlers::generate::dotenv::write_template_lite()?,
+        crate::command_handlers::generate::dotenv::write_template_lite(
+            backends.contains("sqlite"),
+        )?,
         vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
     ];
 
@@ -183,7 +185,7 @@ fn run_inner(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()>
         docker::write_template()?,
         cargo_config::write_template()?,
         main::write_template()?,
-        crate::command_handlers::generate::dotenv::write_template()?,
+        crate::command_handlers::generate::dotenv::write_template(backends.contains("sqlite"))?,
         vec![Change::new("./.gitignore", "\n.env\n*.sqlite\n")?.append()],
     ];
 

@@ -83,12 +83,8 @@ pub(crate) fn setup_completions() -> io::Result<()> {
                 "zsh" => setup_zsh()?,
                 "fish" => setup_fish()?,
                 "elvish" => setup_elvish()?,
-                _ => {
-                    eprintln!("UNSUPPORTED SHELL");
-                    std::process::exit(1);
-                } // unsupported shell
+                _ => {} // unsupported shell
             }
-            println!("shell setup completed, restart your shell to get completions");
         }
     }
     Ok(())

@@ -169,7 +169,9 @@ fn describe_subcommand() -> Command {
     let mut cmd = Command::new("describe");
 
     // inject table "command" really just tables into the auto-complete list
-    if is_autocomplete() && std::env::var("DATABASE_URL").is_ok() {
+    let args: Option<String> = std::env::args().rev().nth(1);
+    let args: Option<&str> = args.as_deref();
+    if args == Some("describe") && is_autocomplete() && std::env::var("DATABASE_URL").is_ok() {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_time()
             .enable_io()
@@ -209,7 +211,12 @@ fn model_from_table_subcommand() -> Command {
         .alias("m");
 
     // inject table "command" really just tables into the auto-complete list
-    if is_autocomplete() && std::env::var("DATABASE_URL").is_ok() {
+    let args: Option<String> = std::env::args().rev().nth(1);
+    let args: Option<&str> = args.as_deref();
+    if args == Some("model-from-table")
+        && is_autocomplete()
+        && std::env::var("DATABASE_URL").is_ok()
+    {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_time()
             .enable_io()
