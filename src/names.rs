@@ -1,6 +1,5 @@
 use cruet::Inflector;
 use std::path::PathBuf;
-use welds::model_traits::TableIdent;
 
 #[derive(Debug)]
 pub(crate) struct Names {

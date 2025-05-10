@@ -8,8 +8,13 @@ pub(crate) struct Field {
     pub(crate) primary_key: bool,
     pub(crate) welds_ignored: bool,
     pub(crate) name: String,
+    pub(crate) col_name: String,
     pub(crate) ty: Type,
     pub(crate) null: bool,
+}
+
+impl Field {
+    //pub(crate) fn rust_field_name(&self) {}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -162,11 +167,13 @@ impl FromStr for Field {
 
         // no type, default to string
         if parts.len() == 1 {
+            let name = parts[0].to_snake_case();
             return Ok(Field {
                 visibility: Visibility::default(),
                 primary_key: parts[0] == "id",
                 welds_ignored: false,
-                name: parts[0].to_snake_case(),
+                col_name: name.clone(),
+                name,
                 ty: Type::String,
                 null: false,
             });
@@ -174,11 +181,13 @@ impl FromStr for Field {
 
         // parse the type
         if parts.len() == 2 {
+            let name = parts[0].to_snake_case();
             return Ok(Field {
                 visibility: Visibility::default(),
                 primary_key: parts[0] == "id",
                 welds_ignored: false,
-                name: parts[0].to_snake_case(),
+                col_name: name.clone(),
+                name,
                 ty: Type::from_str(parts[1])
                     .map_err(|_| GumboError::InvalidFieldType(s.to_string()))?,
                 null: false,
@@ -189,11 +198,13 @@ impl FromStr for Field {
         if parts.len() == 3 {
             let tail = parts[2].trim().to_lowercase();
             let null = tail == "null" || tail == "optional" || tail == "option";
+            let name = parts[0].to_snake_case();
             return Ok(Field {
                 visibility: Visibility::default(),
                 primary_key: parts[0] == "id",
                 welds_ignored: false,
-                name: parts[0].to_snake_case(),
+                col_name: name.clone(),
+                name,
                 ty: Type::from_str(parts[1])
                     .map_err(|_| GumboError::InvalidFieldType(s.to_string()))?,
                 null,

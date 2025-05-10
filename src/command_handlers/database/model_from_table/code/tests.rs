@@ -26,6 +26,7 @@ fn parse_basic() {
             primary_key: true,
             welds_ignored: false,
             name: "id".to_string(),
+            col_name: "id".to_string(),
             ty: Type::Raw("".to_string(), "i32".to_string()),
             null: false
         }
@@ -37,6 +38,7 @@ fn parse_basic() {
             primary_key: false,
             welds_ignored: false,
             name: "other".to_string(),
+            col_name: "other".to_string(),
             ty: Type::Raw("".to_string(), "i64".to_string()),
             null: true
         }
@@ -48,6 +50,7 @@ fn parse_basic() {
             primary_key: false,
             welds_ignored: false,
             name: "other2".to_string(),
+            col_name: "other2".to_string(),
             ty: Type::Raw("".to_string(), "uuid::Uuid".to_string()),
             null: true
         }
@@ -59,6 +62,7 @@ fn parse_basic() {
             primary_key: false,
             welds_ignored: false,
             name: "other3".to_string(),
+            col_name: "other3".to_string(),
             ty: Type::Raw("".to_string(), "String".to_string()),
             null: false
         }
@@ -70,6 +74,7 @@ fn parse_basic() {
             primary_key: false,
             welds_ignored: false,
             name: "other4".to_string(),
+            col_name: "other4".to_string(),
             ty: Type::Raw("".to_string(), "uuid::Uuid".to_string()),
             null: false
         }
@@ -93,6 +98,7 @@ fn parse_keep() {
             primary_key: false,
             welds_ignored: true,
             name: "keep".to_string(),
+            col_name: "keep".to_string(),
             ty: Type::Raw(
                 "".to_string(),
                 "std::collections::HashMap<String, String>".to_string()

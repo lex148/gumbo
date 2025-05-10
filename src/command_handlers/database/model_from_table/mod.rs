@@ -4,6 +4,7 @@ use crate::fields::Type;
 use crate::fields::{Field, Visibility};
 use crate::names::Names;
 use crate::templates::models::{build as build_full, build_struct};
+use cruet::Inflector;
 use welds::Client;
 use welds::detect::TableDef;
 use welds::detect::find_all_tables;
@@ -15,10 +16,13 @@ use code::{find_model, read_fields};
 
 // update or generate a model from an existing table in the database
 pub(crate) async fn run(table_name: &str) -> Result<Vec<Change>> {
-    let names = Names::new(table_name);
+    let mut names = Names::new(table_name);
 
     let mut parts: Vec<_> = table_name.trim().split(".").collect();
     let table_name: &str = parts.pop().unwrap();
+
+    // override the recommended table name to use the matched one that the user entered
+    names.table_name = table_name.to_string();
 
     // get the columns/fields from the database.
     let pool = welds::connections::connect_from_env().await?;
@@ -68,11 +72,14 @@ fn into_fields(def: &TableDef, syntax: welds::Syntax) -> Vec<Field> {
                 .map(|p| p.full_rust_type())
                 .unwrap_or_else(|| sql_type.clone());
 
+            let name = pluralizer::pluralize(c.name(), 1, false).to_snake_case();
+
             Field {
                 visibility: Visibility::default(),
                 primary_key: c.primary_key(),
                 welds_ignored: false,
-                name: c.name().to_string(),
+                name,
+                col_name: c.name().to_string(),
                 ty: Type::Raw(sql_type, rust_type),
                 null: c.null() && !c.primary_key(),
             }

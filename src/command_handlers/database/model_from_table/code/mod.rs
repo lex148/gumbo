@@ -80,6 +80,8 @@ pub(super) fn read_fields(code: &str) -> Vec<Field> {
             primary_key: b.head.contains("primary_key"),
             welds_ignored: b.head.contains("[welds(ignore)]"),
             name: b.name.to_string(),
+            // code columns are overriden unless `ignore` no need to parse col_name.
+            col_name: b.name.to_string(),
             ty: Type::Raw("".to_string(), b.r#type.to_string()),
             null: b.null,
         })

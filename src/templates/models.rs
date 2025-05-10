@@ -5,8 +5,15 @@ use crate::names::Names;
 use std::str::FromStr;
 
 pub(crate) fn write_template(names: &Names, fields: &[Field]) -> Result<Vec<Change>> {
+    let mut fields: Vec<_> = fields.to_vec();
+
+    // auto add a primary_key if there isn't one
+    if !fields.iter().any(|x| x.primary_key) {
+        fields.push(Field::from_str("id:uuid")?);
+    }
+
     let path = &names.model_path;
-    let code = build(names, fields)?;
+    let code = build(names, &fields)?;
     Ok(vec![Change::new_from_path(path, code)?.add_parent_mod()])
 }
 
@@ -26,15 +33,10 @@ pub(crate) fn build(names: &Names, fields: &[Field]) -> Result<String> {
 }
 
 pub(crate) fn build_struct(names: &Names, fields: &[Field]) -> Result<String> {
-    let (mut id_fields, fields): (Vec<_>, Vec<_>) =
+    let (id_fields, fields): (Vec<_>, Vec<_>) =
         fields.iter().partition(|f| f.primary_key || f.name == "id");
-    let default_id_field: Field = Field::from_str("id:uuid")?;
 
-    // the ID field, or use a default
-    if id_fields.is_empty() {
-        id_fields.push(&default_id_field);
-    }
-
+    // put the primary_key fields first
     let innerds: Vec<String> = id_fields
         .iter()
         .chain(fields.iter())
@@ -56,6 +58,7 @@ fn field_line(field: &Field) -> String {
         primary_key,
         welds_ignored,
         name,
+        col_name,
         ty,
         null,
     } = field;
@@ -67,6 +70,12 @@ fn field_line(field: &Field) -> String {
     if *welds_ignored {
         attrs.push("#[welds(ignore)]".to_string())
     }
+
+    // add a column rename if the column doesn't match the field
+    if name != col_name {
+        attrs.push(format!("#[welds(rename=\"{col_name}\")]"))
+    }
+
     let attrs_text = attrs.join("\n");
 
     let mut name: String = name.to_string();

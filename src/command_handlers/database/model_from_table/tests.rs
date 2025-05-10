@@ -18,7 +18,7 @@ fn create_peoples_table(_: &TableState) -> welds::errors::Result<MigrationStep> 
         .id(|c| c("id", MigrationType::Int))
         .column(|c| c("name", MigrationType::String).create_unique_index())
         .column(|c| c("age", MigrationType::IntBig))
-        .column(|c| c("likes_apples", MigrationType::Bool).is_null());
+        .column(|c| c("likes_apple", MigrationType::Bool).is_null());
     Ok(MigrationStep::new("create_peoples_table", m))
 }
 
@@ -27,18 +27,6 @@ async fn should_be_able_to_connect() {
     // no errors
     let _conn = test_db().await;
 }
-
-// const EXPECTED_HEADER: &str = "use welds::prelude::*;";
-//
-// const EXPECTED_MODEL: &str = "
-// #[derive(Debug, WeldsModel, PartialEq)]
-// pub(crate) struct person {
-//     #[welds(primary_key)]
-//     id: string,
-//     age: i64,
-//     likes_apples: Option<bool>
-// }
-// ";
 
 #[tokio::test]
 async fn should_be_able_to_setup_fields_for_basic() {
@@ -59,7 +47,7 @@ async fn should_be_able_to_setup_fields_for_basic() {
     f.ty = Type::Raw("INTEGER".to_string(), "i32".to_string());
     assert_eq!(fields[1], f, "INDEX: 1");
 
-    let mut f = Field::from_str("likes_apples:bool:null").unwrap();
+    let mut f = Field::from_str("likes_apple:bool:null").unwrap();
     f.ty = Type::Raw("BOOLEAN".to_string(), "bool".to_string());
     assert_eq!(fields[2], f, "INDEX: 2");
 
