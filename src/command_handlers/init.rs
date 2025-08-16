@@ -158,8 +158,16 @@ fn run_inner(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()>
         rootpath,
         &["add", "gumbo-lib", "--features=sessions,turbo-streams"],
     )?;
-    // version 0.11 to match auth2
-    add_dependencies(rootpath, &["add", "reqwest@0.11", "--features=json"])?;
+    add_dependencies(
+        rootpath,
+        &[
+            "add",
+            "reqwest",
+            "--no-default-features",
+            //re-add default with rustls instead
+            "--features=rustls-tls,json,charset,http2,system-proxy",
+        ],
+    )?;
 
     let full = std::fs::canonicalize(rootpath)?;
     let name: String = full

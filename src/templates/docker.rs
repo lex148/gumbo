@@ -20,7 +20,7 @@ static IGNORE: &str = r#"
 "#;
 
 static CODE: &str = r#"
-FROM clux/muslrust:amd64-1.86.0-stable-2025-04-13 AS chef
+FROM clux/muslrust:amd64-1.89.0-stable-2025-08-14 AS chef
 RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 \
   && chmod a+xr tailwindcss-linux-x64 \
   && mv tailwindcss-linux-x64 /usr/bin/tailwindcss
@@ -50,7 +50,7 @@ RUN cargo build --release --target x86_64-unknown-linux-musl --bin server
 RUN strip /app/target/x86_64-unknown-linux-musl/release/server
 
 # Use an intermediate image to gather CA certificates
-FROM debian:buster AS certs
+FROM debian:trixie AS certs
 RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 # copy the linked certs to a hard copy
 RUN cp -Lr /etc/ssl/certs /etc/ssl/certs_hardcopy
