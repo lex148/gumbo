@@ -20,6 +20,7 @@ fn build_crud_template(names: &Names) -> String {
 use crate::models::{modelmod}::{modelstruct};
 use crate::views::layouts::MainLayout;
 use gumbo_lib::Session;
+use gumbo_lib::view::app_path;
 use super::form::Form;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -45,7 +46,7 @@ pub(crate) fn New(args: &ViewArgs) -> Html {{
     html! {{
         <>
           <MainLayout session={{ args.session.clone() }}>
-            <Form action={{ "/{action}" }} method={{"POST"}} {modelmod}={{ args.{modelmod}.clone() }} />
+            <Form action={{ app_path("/{action}") }} method={{"POST"}} {modelmod}={{ args.{modelmod}.clone() }} />
           </MainLayout>
         </>
     }}

@@ -48,7 +48,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {{
             <h1 class="mb-6">{{"List of {title}"}}</h1>
             {{ args.list.iter().map(|x| html!{{ <Row {single}={{x}} />}}  ).collect::<Html>() }}
             <br/>
-            <a href={{"/{viewmod}/new"}} >{{"New {title}"}}</a>
+            <a href={{app_path("/{viewmod}/new")}} >{{"New {title}"}}</a>
           </div>
         </MainLayout>
     }}
@@ -65,8 +65,8 @@ fn Row(args: &RowArgs) -> Html {{
         <div class="mb-4">
             <{name}View {single}={{args.{single}.clone()}} />
             <div class="w-24 flex justify-between">
-              <a href={{format!("/{viewmod}/{{}}/edit", args.{single}.id)}} >{{"Edit"}}</a>
-              <a href={{format!("/{viewmod}/{{}}", args.{single}.id)}} data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{{"Delete"}}</a>
+              <a href={{app_path(format!("/{viewmod}/{{}}/edit", args.{single}.id))}} >{{"Edit"}}</a>
+              <a href={{app_path(format!("/{viewmod}/{{}}", args.{single}.id))}} data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{{"Delete"}}</a>
             </div>
         </div>
     }}

@@ -48,6 +48,7 @@ pub(crate) fn usings(names: &Names) -> String {
 use crate::views::layouts::MainLayout;
 use std::sync::Arc;
 use gumbo_lib::Session;
+use gumbo_lib::view::app_path;
 use yew::prelude::*;
 "#
     )

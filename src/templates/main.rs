@@ -59,6 +59,7 @@ use actix_web::{web::Data, App, HttpServer};
 use std::env;
 use std::net::SocketAddr;
 use crate::controllers::*;
+use actix_web::middleware::NormalizePath;
 
 mod controllers;
 mod errors;
@@ -108,6 +109,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(NormalizePath::trim())
             .app_data(client.clone())
             .service(health_controller::index)
             .service(assets_controller::styles)

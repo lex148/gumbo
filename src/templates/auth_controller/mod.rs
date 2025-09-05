@@ -137,7 +137,19 @@ fn siteroot(req: &HttpRequest) -> String {
         .and_then(|value| value.to_str().ok())
         .unwrap_or_default();
     // Reconstruct the original requested URL using the scheme and original host
-    let root = format!("{}://{}", req.connection_info().scheme(), original_host);
+    let mut root = format!("{}://{}", req.connection_info().scheme(), original_host);
+
+    // If the developer has given a app root, append to the end of the url.
+    let app_root = gumbo_lib::app_root();
+    if app_root != "/" {
+        if app_root.ends_with("/") {
+            root = format!("{root}{}", &app_root[..(app_root.len() - 1)]);
+        } else {
+            root = format!("{root}{app_root}");
+        }
+    }
+
+
     root
 }
 

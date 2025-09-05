@@ -20,6 +20,7 @@ fn code(sitename: &str) -> String {
     format!(
         r##"
 use gumbo_lib::javascript::js_path;
+use gumbo_lib::view::app_path;
 use gumbo_lib::Session;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -63,8 +64,8 @@ pub(crate) fn Layout(props: &LayoutProps) -> Html {{
           <meta http-equiv="X-UA-Compatible" content="ie=edge" />
           {{session_meta}}
           <title>{{"{sitename}"}}</title>
-          <link rel="stylesheet" href="/app.css" />
-          <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
+          <link rel="stylesheet" href={{app_path("/app.css")}} />
+          <link rel="icon" href={{app_path("/assets/favicon.ico")}} type="image/x-icon" />
           <script defer=true src={{turbo}} />
           <script type="module">{{STIMULUS_INIT}}</script>
           {{ live_reload }}

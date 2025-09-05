@@ -20,6 +20,7 @@ use crate::models::{modelmod}::{modelstruct};
 use crate::views::layouts::MainLayout;
 use super::form::Form;
 use gumbo_lib::Session;
+use gumbo_lib::view::app_path;
 use std::sync::Arc;
 use yew::prelude::*;
 
@@ -40,7 +41,7 @@ impl ViewArgs {{
 
 #[function_component]
 pub(crate) fn Edit(args: &ViewArgs) -> Html {{
-    let route = format!("/{action}/{{}}", args.{modelmod}.id );
+    let route = app_path(format!("/{action}/{{}}", args.{modelmod}.id ));
     html! {{
         <>
           <MainLayout session={{ args.session.clone() }}>

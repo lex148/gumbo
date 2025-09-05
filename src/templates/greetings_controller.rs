@@ -121,6 +121,7 @@ pub async fn forever_await(_: ()) -> Option<(std::result::Result<Bytes, actix_we
 static VIEW: &str = r#"
 use gumbo_lib::session::Session;
 use gumbo_lib::javascript::js_path;
+use gumbo_lib::view::app_path;
 use crate::views::layouts::MainLayout;
 use std::sync::Arc;
 use yew::prelude::*;
@@ -145,7 +146,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
 
         <div class="w-fill m-auto" data-controller="greeting">
 
-          <img data-action="click->greeting#greet" src="/assets/gumbo.webp" class="h-80 block m-auto"/>
+          <img data-action="click->greeting#greet" src={{app_path("/assets/gumbo.webp")}} class="h-80 block m-auto"/>
 
           <h1 class="text-4xl">{ "Welcome to Gumbo" }</h1>
 
@@ -155,11 +156,11 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
               <br/>
               <h1>{ format!("You are logged in as: {}", session.sub()) }</h1>
               <br/>
-              <a href="/auth/logout" data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{"Logout"}</a>
+              <a href={{app_path("/auth/logout")}} data-turbo-method="delete" data-turbo-confirm="Are you sure?" rel="nofollow">{"Logout"}</a>
             } else {
 
               <br/>
-              <a href="/auth/login/google" data-turbo="false">{"Login With Google"}</a>
+              <a href={{app_path("/auth/login/google")}} data-turbo="false">{"Login With Google"}</a>
               <br/>
               <div class="text-gray-600 text-sm">
                 <div>{"Setup of google OAuth is very simple. Just add the client_id/client_secret to your .env or ENV VARs."}</div>
@@ -167,7 +168,7 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
               </div>
 
               <br/>
-              <a href="/auth/login/fakeoauth" data-turbo="false">{"Login With FakeOAuth"}</a>
+              <a href={{app_path("/auth/login/fakeoauth")}} data-turbo="false">{"Login With FakeOAuth"}</a>
               <br/>
               <div class="text-gray-600 text-sm">
                 <div>{"FakeOAuth is a 'Fake' OAuth provider you can run locally while you build your app."}</div>
