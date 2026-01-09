@@ -1,6 +1,6 @@
 [package]
 name = "gumbo"
-version = "0.1.25"
+version = "0.1.26"
 edition = "2024"
 license = "BSD-3-Clause"
 readme = "README.md"
@@ -28,7 +28,7 @@ sqlx = { version = "0.8", features = [ "runtime-tokio-rustls" ] }
 tokio = { version = "1", features = ["rt"] }
 tabled = "0.20"
 dotenvy = "0.15"
-tree-sitter = "0.25"
+tree-sitter = "0.26"
 tree-sitter-rust = "0.24"
 tokio-macros = "2.6"
 clap_complete = { version = "4.5", features = ["unstable-dynamic"] }

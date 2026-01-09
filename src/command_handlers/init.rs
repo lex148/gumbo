@@ -149,7 +149,6 @@ fn run_inner(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()>
     add_dependencies(rootpath, &["add", "uuid", "--features=v4,serde"])?;
     add_dependencies(rootpath, &["add", "aes-gcm"])?;
     add_dependencies(rootpath, &["add", "base64"])?;
-    add_dependencies(rootpath, &["add", "bincode"])?;
     add_dependencies(rootpath, &["add", "dotenvy"])?;
     add_dependencies(rootpath, &["add", "futures"])?;
     add_dependencies(rootpath, &["add", "oauth2"])?;
@@ -163,9 +162,7 @@ fn run_inner(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()>
         &[
             "add",
             "reqwest",
-            "--no-default-features",
-            //re-add default with rustls instead
-            "--features=rustls-tls,json,charset,http2,system-proxy",
+            "--features=json,charset,http2,system-proxy",
         ],
     )?;
 
