@@ -25,7 +25,7 @@ pub(crate) fn generate(name: &str, actions: &[String], no_views: bool) -> Result
         .filter(|a| a.method == "get")
         .cloned()
         .collect();
-    if !view_actions.is_empty() && no_views == false {
+    if !view_actions.is_empty() && !no_views {
         changes.push(view::write_empty_templates(&names, &view_actions)?);
     }
 
@@ -33,9 +33,7 @@ pub(crate) fn generate(name: &str, actions: &[String], no_views: bool) -> Result
         println!("FILE: {:?}", change.file());
     }
 
-    for change in changes.iter().flatten() {
-        write_to_disk(&root_path, change)?;
-    }
+    write_to_disk(&root_path, changes.as_slice().iter().flatten())?;
 
     println!("Controller Generate Completed");
     crate::command_handlers::run_rustfmt(&root_path);

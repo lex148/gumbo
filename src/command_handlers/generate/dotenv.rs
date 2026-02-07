@@ -4,13 +4,11 @@ use crate::errors::Result;
 use base64::{Engine, engine::general_purpose::STANDARD};
 
 pub(crate) fn generate() -> Result<()> {
-    let rootpath = get_root_path().unwrap();
+    let root_path = get_root_path().unwrap();
 
     let changes: Vec<Change> = write_template(false).expect("unable to write .env file");
 
-    for change in &changes {
-        write_to_disk(&rootpath, change)?;
-    }
+    write_to_disk(&root_path, changes.as_slice().iter())?;
 
     println!("A .env was create.");
 

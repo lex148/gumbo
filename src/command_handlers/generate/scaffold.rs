@@ -26,9 +26,7 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<()> {
         println!("FILE: {:?}", change.file());
     }
 
-    for change in changes.as_ref().iter().flatten() {
-        write_to_disk(&root_path, change)?;
-    }
+    write_to_disk(&root_path, changes.as_slice().iter().flatten())?;
 
     println!("Scaffold Completed");
     println!("Resorse: {name}");

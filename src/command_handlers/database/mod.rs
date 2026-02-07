@@ -49,9 +49,7 @@ async fn run_inner(args: &ArgMatches) -> Result<()> {
             for change in changes.as_slice().iter().flatten() {
                 println!("FILE: {:?}", change.file());
             }
-            for change in changes.as_slice().iter().flatten() {
-                write_to_disk(&root_path, change)?;
-            }
+            write_to_disk(&root_path, changes.as_slice().iter().flatten())?;
             crate::command_handlers::run_rustfmt(&root_path);
             println!("Model Update Completed");
         }

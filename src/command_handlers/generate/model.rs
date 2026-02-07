@@ -27,9 +27,7 @@ pub(crate) fn generate(name: &str, fields: &[String], no_migration: bool) -> Res
         println!("FILE: {:?}", change.file());
     }
 
-    for change in changes.as_slice().iter().flatten() {
-        write_to_disk(&root_path, change)?;
-    }
+    write_to_disk(&root_path, changes.as_slice().iter().flatten())?;
 
     println!("Model Generate Completed");
     println!("Model: {name}");

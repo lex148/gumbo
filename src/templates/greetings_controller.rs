@@ -190,12 +190,12 @@ pub(crate) fn View(args: &ViewArgs) -> Html {
                   <a data-turbo="false" href="https://github.com/rui314/mold#user-content-how-to-use">{"Setup mold as your linker"}</a>
                 </li>
                 <li class="list-item" >
-                  {"If you use cargo watch to rebuild while doing a task like styling or working with your HTML make SURE you disable the delay"}
+                  {"You can get a live edit like experiance using external tools like bacon"}
                 </li>
             </ol>
 
             <div class="inline-block p-1 m-1 pt-2 bg-gray-200 text-gray-500 border border-gray-300 rounded-md ">
-              {"cargo watch -d 0.0 -w ./src -x run"}
+              {"bacon run-long"}
             </div>
 
           </div>

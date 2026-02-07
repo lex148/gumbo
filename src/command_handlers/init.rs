@@ -102,16 +102,9 @@ fn run_inner_welds_only(rootpath: &Path, mut backends: HashSet<&'static str>) ->
         println!("CREATING: {:?}", change.file());
     }
 
-    for change in changes.iter().flatten() {
-        write_to_disk(rootpath, change)?;
-    }
+    write_to_disk(rootpath, changes.iter().flatten())?;
 
     super::run_rustfmt(rootpath);
-
-    //println!();
-    //println!(
-    //    "To start developing, go to your project and run: \"cargo watch -d 0.0 -w ./src -x run\""
-    //);
 
     Ok(())
 }
@@ -202,16 +195,12 @@ fn run_inner(rootpath: &Path, mut backends: HashSet<&'static str>) -> Result<()>
         println!("CREATING: {:?}", change.file());
     }
 
-    for change in changes.iter().flatten() {
-        write_to_disk(rootpath, change)?;
-    }
+    write_to_disk(rootpath, changes.iter().flatten())?;
 
     super::run_rustfmt(rootpath);
 
     println!();
-    println!(
-        "To start developing, go to your project and run: \"cargo watch -d 0.0 -w ./src -x run\""
-    );
+    println!("To start developing, go to your project and run: \"cargo run\"");
 
     Ok(())
 }

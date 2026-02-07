@@ -139,7 +139,7 @@ impl Change {
 }
 
 /// make this change add the file to its parent module
-pub(crate) fn write_to_disk(rootpath: &Path, change: &Change) -> Result<()> {
+fn write_change_to_disk(rootpath: &Path, change: &Change) -> Result<()> {
     let mut fullpath = rootpath.to_path_buf();
     fullpath.push(&change.file);
 
@@ -158,12 +158,11 @@ pub(crate) fn write_to_disk(rootpath: &Path, change: &Change) -> Result<()> {
         }
     };
 
-    if change.add_parent_mod {
-        if let Some(modname) = change.modname() {
-            if let Some(modpath) = change.parent_mod() {
-                append_module(rootpath, &modpath, &modname)?;
-            }
-        }
+    if change.add_parent_mod
+        && let Some(modname) = change.modname()
+        && let Some(modpath) = change.parent_mod()
+    {
+        append_module(rootpath, &modpath, &modname)?;
     }
 
     match &change.content {
@@ -171,6 +170,23 @@ pub(crate) fn write_to_disk(rootpath: &Path, change: &Change) -> Result<()> {
         Content::Bytes(x) => file.write_all(x.as_slice())?,
         _ => panic!(),
     };
+
+    Ok(())
+}
+
+/// writes all changes to disk, then bubbles up any errors.
+/// doesn't stop the write for one failed change.
+pub(crate) fn write_to_disk<'c, I>(root_path: &Path, changes: I) -> Result<()>
+where
+    I: Iterator<Item = &'c Change>,
+{
+    // write all the changes, then bubble up any Error
+    let mut results = Vec::default();
+    for change in changes {
+        results.push(write_change_to_disk(root_path, change));
+    }
+    let results: std::result::Result<Vec<_>, _> = results.into_iter().collect();
+    results?;
 
     Ok(())
 }
