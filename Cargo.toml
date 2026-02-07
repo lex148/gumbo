@@ -1,6 +1,6 @@
 [package]
 name = "gumbo"
-version = "0.1.27"
+version = "0.1.28"
 edition = "2024"
 license = "BSD-3-Clause"
 readme = "README.md"
