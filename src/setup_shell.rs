@@ -55,7 +55,7 @@ fn setup_elvish() -> io::Result<()> {
 
 /// Setup completion for PowerShell
 #[cfg(target_os = "windows")]
-fn setup_powershell() -> io::Result<()> {
+fn setup_powershell() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let profile = env::var("USERPROFILE")?;
     let mut rc = PathBuf::from(profile);
     rc.push(r"Documents/PowerShell/Microsoft.PowerShell_profile.ps1");
@@ -71,7 +71,7 @@ fn setup_powershell() -> io::Result<()> {
 }
 
 /// Main entry: generate completion scripts and set up shell integration
-pub(crate) fn setup_completions() -> io::Result<()> {
+pub(crate) fn setup_completions() -> Result<(), Box<dyn std::error::Error>> {
     // Detect shell and configure
     if cfg!(target_os = "windows") {
         #[cfg(target_os = "windows")]
