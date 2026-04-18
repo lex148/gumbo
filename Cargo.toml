@@ -1,6 +1,6 @@
 [package]
 name = "gumbo"
-version = "0.1.28"
+version = "0.1.29"
 edition = "2024"
 license = "BSD-3-Clause"
 readme = "README.md"
@@ -18,9 +18,9 @@ base64 = "0.22"
 chrono = "0.4"
 clap = { version = "4.5", features = ["derive", "string"] }
 codegen = "0.3"
-cruet = "0.15"
+cruet = "1.0"
 pluralizer = "0.5"
-rand = "0.9"
+rand = "0.10"
 thiserror = "2.0"
 welds = { version = '^0.4', features=["postgres","mysql","mssql","sqlite","migrations"] }
 welds-connections = { version = '^0.4', features=["full"] }

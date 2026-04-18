@@ -15,9 +15,13 @@ pub(crate) fn generate(name: &str, fields: &[String]) -> Result<()> {
 
     let fields = fields?;
 
-    let changes = [migrations::create_table::write_template(
-        &root_path, &names, &fields,
-    )?];
+    let changes = if fields.is_empty() {
+        [migrations::change_table::write_template(&root_path, name)?]
+    } else {
+        [migrations::create_table::write_template(
+            &root_path, &names, &fields,
+        )?]
+    };
 
     for change in changes.as_ref().iter().flatten() {
         println!("FILE: {:?}", change.file());

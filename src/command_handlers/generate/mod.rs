@@ -34,7 +34,7 @@ fn run_inner(args: &ArgMatches) -> Result<()> {
         }
         Some(("migration", sub_m)) => {
             let name: &String = sub_m.get_one::<String>("name").unwrap();
-            let fields = sub_m.get_many::<String>("fields").unwrap();
+            let fields = sub_m.get_many::<String>("fields").unwrap_or_default();
             let fields: Vec<String> = fields.into_iter().cloned().collect();
             migration::generate(name, &fields)?
         }

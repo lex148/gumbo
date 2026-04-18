@@ -1,5 +1,6 @@
 use cruet::Inflector;
 use std::path::PathBuf;
+pub(crate) mod table;
 
 #[derive(Debug)]
 pub(crate) struct Names {

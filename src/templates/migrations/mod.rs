@@ -1,3 +1,4 @@
+pub(crate) mod change_table;
 pub(crate) mod create_table;
 pub(crate) mod init;
 use crate::change::Change;

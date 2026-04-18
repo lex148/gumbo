@@ -16,8 +16,8 @@ pub(crate) fn generate() -> Result<()> {
 }
 
 fn rand_auth_secret() -> String {
-    use rand::rand_core::{OsRng, TryRngCore};
-    let mut rng = OsRng;
+    use rand::TryRng;
+    let mut rng = rand::rng();
     let mut bytes = [0u8; 32];
     rng.try_fill_bytes(&mut bytes)
         .expect("OS: rand not available");

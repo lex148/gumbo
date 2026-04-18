@@ -117,7 +117,7 @@ fn migration_subcommand() -> Command {
         .arg(
             Arg::new("fields")
                 .help("List of fields for table")
-                .required(true)
+                .required(false)
                 .num_args(1..),
         )
 }
