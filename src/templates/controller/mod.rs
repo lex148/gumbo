@@ -34,17 +34,32 @@ pub(crate) fn write_template(names: &Names, actions: &[Action]) -> Result<Vec<Ch
         parts.push(empty::template(names, action));
     }
 
+    parts.push(write_config_function(&actions));
+
     let code = parts.join("\n");
     let mut changes = vec![Change::new(path, code)?.add_parent_mod()];
 
-    // wireup each action to actix
-    for action in actions {
-        let actionname = action.name.to_snake_case();
-        let route = format!("{ctr_name}::{actionname}");
-        changes.push(Change::append_service(route)?);
-    }
+    // // wireup each action to actix
+    // for action in actions {
+    //     let actionname = action.name.to_snake_case();
+    //     let route = format!("{ctr_name}::{actionname}");
+    //     changes.push(Change::append_service(route)?);
+    // }
+
+    let config_function = format!("{ctr_name}::configure");
+    changes.push(Change::append_actix_config(config_function)?);
 
     Ok(changes)
+}
+
+/// Writes all the actions into a configure function for actix
+pub(crate) fn write_config_function(actions: &[Action]) -> String {
+    let calls: Vec<String> = actions
+        .iter()
+        .map(|x| format!("service({})", x.fn_name()))
+        .collect();
+    let services: String = calls.join(".");
+    format!("\n\npub fn configure(cfg: &mut actix_web::web::ServiceConfig) {{ cfg.{services}; }}\n")
 }
 
 /// Writes all the actions fully build wired up with views

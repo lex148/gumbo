@@ -21,37 +21,106 @@ pub(crate) fn append_service(path: &Path, service: impl Into<String>) -> crate::
     let mut content = String::default();
     file.read_to_string(&mut content)?;
     file.rewind()?;
-    let last_service = match find_last_service_call(&content) {
+    let last = match find_last_service_or_configure_call(&content) {
         Some(x) => x.to_owned(),
         None => return Ok(()),
     };
-    if last_service.contains(&service) {
+    if last.contains(&service) {
         return Ok(());
     }
     let new_service = format!(".service({})", service);
-    let code = format!("{}\n            {}", last_service, new_service);
-    let modified_content = content.replace(&last_service, &code);
+    let code = format!("{}\n            {}", last, new_service);
+    let modified_content = content.replace(&last, &code);
     file.write_all(modified_content.as_bytes())?;
     Ok(())
 }
 
-fn find_last_service_call(input: &str) -> Option<&str> {
-    // Start by searching for the last occurrence of ".service("
-    let mut pos = input.rfind(".service(");
-    while let Some(start) = pos {
-        // Find the closing parenthesis starting from the position just after ".service("
+/// Adds a route to the list of actix services
+pub(crate) fn append_actix_config(
+    path: &Path,
+    config_function: impl Into<String>,
+) -> crate::errors::Result<()> {
+    let config_function: String = config_function.into();
+
+    let mut file = File::options().write(true).read(true).open(path)?;
+    file.rewind()?;
+    let mut content = String::default();
+    file.read_to_string(&mut content)?;
+    file.rewind()?;
+    let last = match find_last_service_or_configure_call(&content) {
+        Some(x) => x.to_owned(),
+        None => return Ok(()),
+    };
+    if last.contains(&config_function) {
+        return Ok(());
+    }
+    let new_config = format!(".configure({})", config_function);
+    let code = format!("{}\n            {}", last, new_config);
+    let modified_content = content.replace(&last, &code);
+    file.write_all(modified_content.as_bytes())?;
+    Ok(())
+}
+
+// fn find_last_service_call(input: &str) -> Option<&str> {
+//     // Start by searching for the last occurrence of ".service("
+//     let mut pos = input.rfind(".service(");
+//     while let Some(start) = pos {
+//         // Find the closing parenthesis starting from the position just after ".service("
+//         let sub_str = &input[start..];
+//         if let Some(end) = sub_str.find(')') {
+//             // Return the substring from ".service(" to the matching ")"
+//             return Some(&sub_str[..end + 1]);
+//         }
+//         // Update the position to search before the current found position
+//         if start == 0 {
+//             break;
+//         }
+//         pos = input[..start - 1].rfind(".service(");
+//     }
+//     None
+// }
+
+fn find_last_service_or_configure_call(input: &str) -> Option<&str> {
+    let mut service_pos = input.rfind(".service(");
+    let mut configure_pos = input.rfind(".configure(");
+
+    loop {
+        // Pick whichever occurrence is later in the string.
+        let (start, is_service) = match (service_pos, configure_pos) {
+            (Some(s), Some(c)) => {
+                if s > c {
+                    (s, true)
+                } else {
+                    (c, false)
+                }
+            }
+            (Some(s), None) => (s, true),
+            (None, Some(c)) => (c, false),
+            (None, None) => return None,
+        };
+
+        //let prefix = if is_service {
+        //    ".service("
+        //} else {
+        //    ".configure("
+        //};
+
         let sub_str = &input[start..];
         if let Some(end) = sub_str.find(')') {
-            // Return the substring from ".service(" to the matching ")"
             return Some(&sub_str[..end + 1]);
         }
-        // Update the position to search before the current found position
+
+        // If we didn't find a closing ')', search for the previous occurrence.
         if start == 0 {
-            break;
+            return None;
         }
-        pos = input[..start - 1].rfind(".service(");
+
+        if is_service {
+            service_pos = input[..start].rfind(".service(");
+        } else {
+            configure_pos = input[..start].rfind(".configure(");
+        }
     }
-    None
 }
 
 const CODE: &str = r#"

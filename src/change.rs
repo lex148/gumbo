@@ -1,5 +1,6 @@
 use crate::errors::{GumboError, Result};
 use crate::templates::ensure_directory_exists;
+use crate::templates::main::append_actix_config;
 use crate::templates::main::append_service;
 use crate::templates::modrs::append_module;
 use std::fs::File;
@@ -11,8 +12,10 @@ use std::{path::PathBuf, str::FromStr};
 pub(crate) enum Action {
     Append,
     Truncate,
-    // the change will result in a service being added to the actix routes
+    // the change will result in a service being added to the actix route directly
     AppendService,
+    // the change will result in an actix config function being added to the main route
+    AppendActixConfig,
 }
 
 #[derive(Debug)]
@@ -84,15 +87,38 @@ impl Change {
 
     /// append_service
     pub(crate) fn append_service(service: impl Into<String>) -> Result<Self> {
-        let path = "./src/main.rs";
-        let file =
-            PathBuf::from_str(path).map_err(|_| GumboError::InvalidPathStr(path.to_string()))?;
-        Ok(Self {
-            file,
-            content: Content::Route(service.into()),
-            action: Action::AppendService,
-            add_parent_mod: false,
-        })
+        let main_files = ["./src/bin/server.rs", "./src/main.rs"];
+        for path in main_files.iter() {
+            let file = PathBuf::from_str(path)
+                .map_err(|_| GumboError::InvalidPathStr(path.to_string()))?;
+            if file.exists() {
+                return Ok(Self {
+                    file,
+                    content: Content::Route(service.into()),
+                    action: Action::AppendService,
+                    add_parent_mod: false,
+                });
+            }
+        }
+        Err(GumboError::InvalidPathStr("Unknown Main File".to_string()))
+    }
+
+    /// append an actix config function to the main actix config
+    pub(crate) fn append_actix_config(function: impl Into<String>) -> Result<Self> {
+        let main_files = ["./src/bin/server.rs", "./src/main.rs"];
+        for path in main_files.iter() {
+            let file = PathBuf::from_str(path)
+                .map_err(|_| GumboError::InvalidPathStr(path.to_string()))?;
+            if file.exists() {
+                return Ok(Self {
+                    file,
+                    content: Content::Route(function.into()),
+                    action: Action::AppendActixConfig,
+                    add_parent_mod: false,
+                });
+            }
+        }
+        Err(GumboError::InvalidPathStr("Unknown Main File".to_string()))
     }
 
     /// make this change append to the contents of the file
@@ -148,6 +174,16 @@ fn write_change_to_disk(rootpath: &Path, change: &Change) -> Result<()> {
     let mut file = match change.action {
         Action::Append => File::options().create(true).append(true).open(fullpath)?,
         Action::Truncate => File::create(fullpath)?,
+
+        Action::AppendActixConfig => {
+            let route = match &change.content {
+                Content::Route(r) => r,
+                _ => panic!(),
+            };
+            append_actix_config(&fullpath, route)?;
+            return Ok(());
+        }
+
         Action::AppendService => {
             let route = match &change.content {
                 Content::Route(r) => r,
