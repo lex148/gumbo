@@ -36,11 +36,9 @@ impl ViewArgs {{
 #[function_component]
 pub(crate) fn View(args: &ViewArgs) -> Html {{
     html! {{
-        <>
-          <MainLayout session={{ args.session.clone() }}>
-            <span>{{"view: views/{viewmod}/{action}"}}</span>
-          </MainLayout>
-        </>
+      <MainLayout session={{ args.session.clone() }}>
+        <span>{{"view: views/{viewmod}/{action}"}}</span>
+      </MainLayout>
     }}
 }}
 "#

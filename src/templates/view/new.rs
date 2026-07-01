@@ -44,11 +44,9 @@ impl ViewArgs {{
 #[function_component]
 pub(crate) fn New(args: &ViewArgs) -> Html {{
     html! {{
-        <>
-          <MainLayout session={{ args.session.clone() }}>
-            <Form action={{ app_path("/{action}") }} method={{"POST"}} {modelmod}={{ args.{modelmod}.clone() }} />
-          </MainLayout>
-        </>
+      <MainLayout session={{ args.session.clone() }}>
+        <Form action={{ app_path("/{action}") }} method={{"POST"}} {modelmod}={{ args.{modelmod}.clone() }} />
+      </MainLayout>
     }}
 }}
 "#

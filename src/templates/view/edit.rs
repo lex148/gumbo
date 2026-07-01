@@ -43,11 +43,9 @@ impl ViewArgs {{
 pub(crate) fn Edit(args: &ViewArgs) -> Html {{
     let route = app_path(format!("/{action}/{{}}", args.{modelmod}.id ));
     html! {{
-        <>
-          <MainLayout session={{ args.session.clone() }}>
-            <Form action={{ route }} method={{"PATCH"}} {modelmod}={{ args.{modelmod}.clone() }} />
-          </MainLayout>
-        </>
+      <MainLayout session={{ args.session.clone() }}>
+        <Form action={{ route }} method={{"PATCH"}} {modelmod}={{ args.{modelmod}.clone() }} />
+      </MainLayout>
     }}
 }}
 "#
